@@ -25,7 +25,7 @@ defmodule PotExamples.Customer do
 
   cube :of_customers,
     sql_table: "customer",
-    title: "Demo cube",
+    title: "customers cube",
     description: "of Customers" do
     dimension(
       [:brand_code, :market_code, :email],
@@ -36,7 +36,7 @@ defmodule PotExamples.Customer do
     dimension(
       :first_name,
       name: :given_name,
-      description: "Louzy documentation"
+      description: "good documentation"
     )
 
     dimension([:birthday_day, :birthday_month],

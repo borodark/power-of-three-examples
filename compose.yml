@@ -16,6 +16,7 @@ services:
     image: docker.io/cubejs/cube:latest
     ports:
       - 4008:4000
+      - 15432:5432
     environment:
       CUBEJS_DB_TYPE: postgres
       CUBEJS_DB_PORT: 5432
@@ -25,7 +26,9 @@ services:
       CUBEJS_DB_PASS: postgres
       CUBEJS_CUBESTORE_HOST: cubestore_router
       CUBEJS_API_SECRET: secret
-      CUBEJS_DEV_MODE: "TRUE"
+      CUBEJS_DEV_MODE: true
+      CUBEJS_PG_SQL_PORT: 5432
+      DEBUG_LOG: true
     volumes:
       - ./:/cube/conf
     depends_on:

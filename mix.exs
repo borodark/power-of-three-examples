@@ -32,8 +32,8 @@ defmodule ExamplesOfPoT.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:power_of_3, path: "../power-of-three"},
-      # {:power_of_3, "~> 0.1.2"},
+      #  {:power_of_3, path: "../power-of-three"},
+      {:power_of_3, github: "borodark/power_of_three", branch: "master"},
       {:recon, "~> 2.5"},
       {:phoenix, "~> 1.7.21"},
       {:phoenix_ecto, "~> 4.5"},

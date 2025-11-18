@@ -46,8 +46,14 @@ defmodule PotExamples.Address do
 
   cube :of_addresses,
     sql_table: "address",
-    title: "Demo cube",
-    description: "of Customers" do
+    title: "cube of addresses",
+    description: "cube of addresses" do
+
+
+    dimension(:id, name: :address_id,
+      primary_key: true
+    )
+
     dimension(
       [:brand_code, :market_code, :country],
       name: :country_bm

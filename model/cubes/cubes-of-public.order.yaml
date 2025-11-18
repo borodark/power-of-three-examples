@@ -1,6 +1,8 @@
 ---
 cubes:
-  - name: of_orders
+  - name: orders
+    description: Orders
+    title: cube of orders
     sql_table: public.order
     sql_alias: order_facts
     measures:
@@ -29,13 +31,20 @@ cubes:
         name: discount_total_amount
         type: sum
         sql: discount_total_amount
-      - name: xz
+      - name: discount_and_tax
         type: number
         format: currency
         sql: sum(discount_total_amount + tax_amount)
       - name: count
         type: count
     dimensions:
+      - meta:
+          ecto_field: id
+          ecto_field_type: id
+        name: order_id
+        type: number
+        primary_key: true
+        sql: id
       - meta:
           ecto_field: financial_status
           ecto_field_type: string

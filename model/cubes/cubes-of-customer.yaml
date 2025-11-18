@@ -2,7 +2,7 @@
 cubes:
   - name: of_customers
     description: of Customers
-    title: Demo cube
+    title: customers cube
     sql_table: customer
     measures:
       - name: count
@@ -22,8 +22,7 @@ cubes:
         type: count_distinct
         description: Filtered by start sector = 0
         filters:
-          - sql: (birthday_month = 1 AND birthday_day >= 20) OR (birthday_month = 2 AND
-              birthday_day <= 18)
+          - sql: (birthday_month = 1 AND birthday_day >= 20) OR (birthday_month = 2 AND birthday_day <= 18)
         sql: email
     dimensions:
       - meta:
@@ -40,7 +39,7 @@ cubes:
           ecto_field_type: string
         name: given_name
         type: string
-        description: Louzy documentation
+        description: good documentation
         sql: first_name
       - meta:
           ecto_fields:
@@ -48,8 +47,7 @@ cubes:
             - birthday_month
         name: zodiac
         type: string
-        description: SQL for a zodiac sign for given [:birthday_day, :birthday_month],
-          not _gyroscope_, TODO unicode of Emoji
+        description: SQL for a zodiac sign for given [:birthday_day, :birthday_month], not _gyroscope_, TODO unicode of Emoji
         sql: |
           CASE
           WHEN (birthday_month = 1 AND birthday_day >= 20) OR (birthday_month = 2 AND birthday_day <= 18) THEN 'Aquarius'
@@ -117,16 +115,3 @@ cubes:
         type: time
         description: updated_at timestamp
         sql: updated_at
-    pre_aggregations:
-      - name: main
-        measures:
-          - of_customers.count
-          - of_customers.aquarii
-        dimensions:
-          - of_customers.zodiac
-      - name: main1
-        measures:
-          - of_customers.count
-          - of_customers.aquarii
-        dimensions:
-          - of_customers.market

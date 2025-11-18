@@ -64,10 +64,15 @@ defmodule PotExamples.Order do
     timestamps()
   end
 
-  cube :of_orders,
+  cube :orders,
     sql_table: "public.order",
     sql_alias: :order_facts,
-    milacious_inject: :penetration_attempt do
+    title: "cube of orders",
+    description: "Orders" do
+
+    dimension(:id, name: :order_id,
+      primary_key: true
+    )
     dimension(:financial_status, name: :FIN)
     dimension(:fulfillment_status, name: :FUL)
     dimension(:market_code)
@@ -77,7 +82,10 @@ defmodule PotExamples.Order do
     measure(:tax_amount, type: :sum, format: :currency)
     measure(:total_amount, type: :sum)
     measure(:discount_total_amount, type: :sum)
-    measure([:discount_total_amount,:tax_amount], format: :currency, name: "xz", type: :number, sql: "sum(discount_total_amount + tax_amount)")
+    measure([:discount_total_amount,:tax_amount],
+      format: :currency,
+      name: "discount_and_tax",
+      type: :number, sql: "sum(discount_total_amount + tax_amount)")
     measure(:count)
   end
 end

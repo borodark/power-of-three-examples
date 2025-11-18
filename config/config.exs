@@ -9,7 +9,7 @@ import Config
 
 config :pot_examples,
   namespace: ExamplesOfPoT,
-  ecto_repos: [Postgres.Repo],
+  ecto_repos: [Postgres.Repo, Cubes.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
