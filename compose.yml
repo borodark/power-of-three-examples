@@ -29,6 +29,7 @@ services:
       CUBEJS_DEV_MODE: true
       CUBEJS_PG_SQL_PORT: 5432
       DEBUG_LOG: true
+      CUBEJS_LOG_LEVEL: trace
     volumes:
       - ./:/cube/conf
     depends_on:

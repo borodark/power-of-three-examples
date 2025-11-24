@@ -69,10 +69,11 @@ defmodule PotExamples.Order do
     sql_alias: :order_facts,
     title: "cube of orders",
     description: "Orders" do
-
-    dimension(:id, name: :order_id,
+    dimension(:id,
+      name: :order_id,
       primary_key: true
     )
+
     dimension(:financial_status, name: :FIN)
     dimension(:fulfillment_status, name: :FUL)
     dimension(:market_code)
@@ -82,10 +83,14 @@ defmodule PotExamples.Order do
     measure(:tax_amount, type: :sum, format: :currency)
     measure(:total_amount, type: :sum)
     measure(:discount_total_amount, type: :sum)
-    measure([:discount_total_amount,:tax_amount],
+
+    measure([:discount_total_amount, :tax_amount],
       format: :currency,
       name: "discount_and_tax",
-      type: :number, sql: "sum(discount_total_amount + tax_amount)")
+      type: :number,
+      sql: "sum(discount_total_amount + tax_amount)"
+    )
+
     measure(:count)
   end
 end

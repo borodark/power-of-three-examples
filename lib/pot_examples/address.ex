@@ -48,9 +48,8 @@ defmodule PotExamples.Address do
     sql_table: "address",
     title: "cube of addresses",
     description: "cube of addresses" do
-
-
-    dimension(:id, name: :address_id,
+    dimension(:id,
+      name: :address_id,
       primary_key: true
     )
 

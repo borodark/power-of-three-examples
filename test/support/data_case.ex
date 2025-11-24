@@ -18,7 +18,7 @@ defmodule ExamplesOfPoT.DataCase do
 
   using do
     quote do
-      alias ExamplesOfPoT.Repo
+      alias Postgres.Repo
 
       import Ecto
       import Ecto.Changeset
@@ -36,7 +36,7 @@ defmodule ExamplesOfPoT.DataCase do
   Sets up the sandbox based on the test tags.
   """
   def setup_sandbox(tags) do
-    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(ExamplesOfPoT.Repo, shared: not tags[:async])
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Postgres.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
   end
 
