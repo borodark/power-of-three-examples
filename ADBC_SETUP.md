@@ -139,23 +139,117 @@ mix test test/pot_examples_web/controllers/page_controller_test.exs
 
 Once the application is running, you can access the ADBC connection from anywhere in your code:
 
-### Using the Registered Process Name
+### Interactive Elixir (iex) Examples
 
-```elixir
-# Get reference to the ADBC connection
-{:ok, conn} = Adbc.Connection.get(ExamplesOfPoT.AdbcConn)
+First, ensure PostgreSQL is running on localhost:15432 with a database named `test` (see [Setting Up PostgreSQL](#setting-up-postgresql) section).
 
-# Execute a query
-{:ok, result} = Adbc.Connection.query(conn, "SELECT * FROM your_table")
+Then start the application in interactive mode:
+
+```bash
+iex -S mix phx.server
 ```
 
-### Using Arrow Format Conversion
+The ADBC connection will be automatically established and registered as `ExamplesOfPoT.AdbcConn`. Now in iex, you can:
 
-ADBC returns data in Apache Arrow format, which can be converted to other formats:
+#### 1. Get the Connection PID
 
 ```elixir
-# Convert to Elixir data structures
-data = Adbc.Connection.fetch_all(conn, "SELECT * FROM your_table")
+# Get the registered ADBC connection process
+conn_pid = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# Verify the connection is active
+IO.inspect(conn_pid)
+# => #PID<0.123.0>
+```
+
+#### 2. Execute a Simple Query
+
+```elixir
+# Get the connection
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# Execute a query
+{:ok, results} = Adbc.Connection.query(conn, "SELECT 1 as test_column, 'hello' as message")
+
+# Inspect the results
+IO.inspect(results)
+```
+
+#### 3. Query with Results from a Table
+
+```elixir
+# Assuming you have a 'users' table in your database
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# Execute a query
+case Adbc.Connection.query(conn, "SELECT id, name FROM users LIMIT 10") do
+  {:ok, results} ->
+    IO.puts("Query succeeded!")
+    IO.inspect(results, limit: :infinity)
+
+  {:error, error} ->
+    IO.puts("Query failed:")
+    IO.inspect(error)
+end
+```
+
+#### 4. Using Query with Parameters
+
+```elixir
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# Prepare statement with parameters
+case Adbc.Connection.query(
+  conn,
+  "SELECT * FROM users WHERE id = ?",
+  [1]
+) do
+  {:ok, results} -> IO.inspect(results)
+  {:error, error} -> IO.inspect(error)
+end
+```
+
+#### 5. Execute Query with Bang Version (raises on error)
+
+```elixir
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# This will raise an error if query fails
+results = Adbc.Connection.query!(conn, "SELECT version()")
+IO.inspect(results)
+```
+
+### Processing Results
+
+ADBC returns results as Apache Arrow tables. To convert to common formats:
+
+```elixir
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# Execute query
+{:ok, table} = Adbc.Connection.query(conn, "SELECT * FROM your_table LIMIT 5")
+
+# Convert to list of maps (requires converting Arrow format)
+# Arrow format is the native output, typically used with analytical libraries
+IO.inspect(table)
+```
+
+### Common ADBC Connection Functions
+
+```elixir
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# Get connection info
+Adbc.Connection.get_info(conn)
+
+# Get available table types
+Adbc.Connection.get_table_types(conn)
+
+# Get database objects (tables, schemas, etc)
+Adbc.Connection.get_objects(conn)
+
+# Set connection options
+Adbc.Connection.set_option(conn, "option_name", "option_value")
 ```
 
 ## Troubleshooting
@@ -205,6 +299,31 @@ The Postgres.Repo (Ecto) continues to handle:
 
 - `lib/pot_examples/application.ex` - Added ADBC child specs
 - `config/test.exs` - Fixed repository configuration
+
+## Quick Reference for iex
+
+```elixir
+# Get connection
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+
+# Execute query (returns {:ok, results} or {:error, error})
+Adbc.Connection.query(conn, "SELECT * FROM your_table LIMIT 10")
+
+# Execute query with pattern matching
+case Adbc.Connection.query(conn, "SELECT COUNT(*) as count FROM your_table") do
+  {:ok, result} -> IO.inspect(result)
+  {:error, error} -> IO.inspect(error)
+end
+
+# Get database metadata
+Adbc.Connection.get_info(conn)
+
+# Get available tables
+Adbc.Connection.get_objects(conn)
+
+# Parameterized query
+Adbc.Connection.query(conn, "SELECT * FROM users WHERE id = ?", [1])
+```
 
 ## References
 
