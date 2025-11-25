@@ -15,7 +15,18 @@ defmodule ExamplesOfPoT.Application do
       # Start a worker by calling: ExamplesOfPoT.Worker.start_link(arg)
       # {ExamplesOfPoT.Worker, arg},
       # Start to serve requests, typically the last entry
-      ExamplesOfPoTWeb.Endpoint
+      ExamplesOfPoTWeb.Endpoint,
+      {Adbc.Database,
+       [
+         driver: :postgresql,
+         uri: "postgresql://username:password@localhost:15432/test",
+         process_options: [name: ExamplesOfPoT.AdbcDB]
+       ]},
+      {Adbc.Connection,
+       [
+         database: ExamplesOfPoT.AdbcDB,
+         process_options: [name: ExamplesOfPoT.AdbcConn]
+       ]}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

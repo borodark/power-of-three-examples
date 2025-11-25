@@ -23,8 +23,10 @@ defmodule Example.Repo.Migrations.Customers do
       add :subtotal_amount, :integer
       add :tax_amount, :integer
       add :total_amount, :integer
+
       add :customer_id,
-        references(:customer)
+          references(:customer)
+
       add :brand_code, :string
       add :market_code, :string
       timestamps()
@@ -47,10 +49,13 @@ defmodule Example.Repo.Migrations.Customers do
       add :province_code, :string
       add :market_code, :string
       add :summary, :string
+
       add :customer_id,
-        references(:customer)
+          references(:customer)
+
       add :order_id,
-        references(:order)
+          references(:order)
+
       timestamps()
     end
   end

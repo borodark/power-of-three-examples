@@ -8,7 +8,20 @@ config :pot_examples, Postgres.Repo,
   hostname: "localhost",
   database: "pot_examples_dev",
   ownership_timeout: 300_000,
+  #  disable_composite_types: true,
   pool_size: System.schedulers_online() * 2
+
+config :pot_examples, Cubes.Repo,
+  port: 15432,
+  stacktrace: true,
+  username: "username",
+  password: "password",
+  hostname: "localhost",
+  database: "test",
+  ownership_timeout: 300_000,
+  #  disable_composite_types: true,
+  pool_size: 1
+
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
