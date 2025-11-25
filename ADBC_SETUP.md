@@ -149,107 +149,107 @@ Then start the application in interactive mode:
 iex -S mix phx.server
 ```
 
-The ADBC connection will be automatically established and registered as `ExamplesOfPoT.AdbcConn`. Now in iex, you can:
+The ADBC connection will be automatically established and registered as `ExamplesOfPoT.AdbcConn`.
 
-#### 1. Get the Connection PID
+#### Getting the Connection
 
 ```elixir
 # Get the registered ADBC connection process
-conn_pid = Process.whereis(ExamplesOfPoT.AdbcConn)
+conn = Process.whereis(ExamplesOfPoT.AdbcConn)
 
 # Verify the connection is active
-IO.inspect(conn_pid)
+IO.inspect(conn)
 # => #PID<0.123.0>
 ```
 
-#### 2. Execute a Simple Query
+#### Using the Connection for Metadata
 
-```elixir
-# Get the connection
-conn = Process.whereis(ExamplesOfPoT.AdbcConn)
-
-# Execute a query
-{:ok, results} = Adbc.Connection.query(conn, "SELECT 1 as test_column, 'hello' as message")
-
-# Inspect the results
-IO.inspect(results)
-```
-
-#### 3. Query with Results from a Table
-
-```elixir
-# Assuming you have a 'users' table in your database
-conn = Process.whereis(ExamplesOfPoT.AdbcConn)
-
-# Execute a query
-case Adbc.Connection.query(conn, "SELECT id, name FROM users LIMIT 10") do
-  {:ok, results} ->
-    IO.puts("Query succeeded!")
-    IO.inspect(results, limit: :infinity)
-
-  {:error, error} ->
-    IO.puts("Query failed:")
-    IO.inspect(error)
-end
-```
-
-#### 4. Using Query with Parameters
+ADBC works best for metadata operations and Arrow data operations:
 
 ```elixir
 conn = Process.whereis(ExamplesOfPoT.AdbcConn)
 
-# Prepare statement with parameters
-case Adbc.Connection.query(
-  conn,
-  "SELECT * FROM users WHERE id = ?",
-  [1]
-) do
-  {:ok, results} -> IO.inspect(results)
-  {:error, error} -> IO.inspect(error)
-end
+# Get database information
+{:ok, info} = Adbc.Connection.get_info(conn)
+IO.inspect(info)
+
+# Get database objects (tables, schemas, etc)
+{:ok, objects} = Adbc.Connection.get_objects(conn, 0)
+IO.inspect(objects)
+
+# Get available table types
+{:ok, table_types} = Adbc.Connection.get_table_types(conn)
+IO.inspect(table_types)
 ```
 
-#### 5. Execute Query with Bang Version (raises on error)
+#### Alternative: Using Postgres.Repo for Queries
+
+For executing SQL queries, it's recommended to use the `Postgres.Repo` (Ecto) instead, which provides better SQL query support:
 
 ```elixir
-conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+# Using Postgres.Repo for SQL queries
+alias Postgres.Repo
 
-# This will raise an error if query fails
-results = Adbc.Connection.query!(conn, "SELECT version()")
-IO.inspect(results)
+# Execute a raw SQL query
+{:ok, result} = Repo.query("SELECT 1 as test_column, 'hello' as message")
+IO.inspect(result)
+
+# Query with parameters
+{:ok, result} = Repo.query("SELECT * FROM users WHERE id = $1", [1])
+IO.inspect(result)
+
+# Query and map results
+{:ok, result} = Repo.query("SELECT id, name FROM users LIMIT 10")
+result.rows |> Enum.each(&IO.inspect/1)
 ```
 
-### Processing Results
+#### Using Ecto Queries (Recommended for Data Access)
 
-ADBC returns results as Apache Arrow tables. To convert to common formats:
+For the best developer experience, use Ecto queries:
 
 ```elixir
-conn = Process.whereis(ExamplesOfPoT.AdbcConn)
+import Ecto.Query
+alias Postgres.Repo
 
-# Execute query
-{:ok, table} = Adbc.Connection.query(conn, "SELECT * FROM your_table LIMIT 5")
+# Simple query
+users = Repo.all(User)
+IO.inspect(users)
 
-# Convert to list of maps (requires converting Arrow format)
-# Arrow format is the native output, typically used with analytical libraries
-IO.inspect(table)
+# Filtered query
+users = Repo.all(from u in User, where: u.id == ^1)
+IO.inspect(users)
+
+# With select clause
+{:ok, result} = Repo.all(from u in User, select: {u.id, u.name}, limit: 10)
+IO.inspect(result)
 ```
 
-### Common ADBC Connection Functions
+### ADBC Connection Metadata Functions
+
+ADBC is optimized for metadata operations on Arrow data:
 
 ```elixir
 conn = Process.whereis(ExamplesOfPoT.AdbcConn)
 
 # Get connection info
 Adbc.Connection.get_info(conn)
+# => {:ok, result_set}
 
 # Get available table types
 Adbc.Connection.get_table_types(conn)
+# => {:ok, result_set}
 
-# Get database objects (tables, schemas, etc)
-Adbc.Connection.get_objects(conn)
+# Get database objects with depth 0 (all)
+Adbc.Connection.get_objects(conn, 0)
+# => {:ok, result_set}
 
 # Set connection options
 Adbc.Connection.set_option(conn, "option_name", "option_value")
+# => :ok | {:error, reason}
+
+# Get string option
+Adbc.Connection.get_string_option(conn, "option_name")
+# => {:ok, value} | {:error, reason}
 ```
 
 ## Troubleshooting
