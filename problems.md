@@ -86,3 +86,33 @@
   on localhost:5432 (or configure the appropriate connection parameters in config/test.exs and
   config/dev.exs).
 
+
+```wlixir 
+
+"""
+http://localhost:4008/#/build?query={%22dimensions%22:[%22orders.market_code%22],%22measures%22:[%22orders.count%22,%22orders.discount_and_tax%22]}
+"""
+
+%FSS.HTTP.Entry{config: FSS.HTTP.Config.t(), url: String.t()}
+Explorer.DataFrame.from_ipc(filename, opts \\ [])
+
+@spec from_ipc(filename :: String.t() | fs_entry(), opts :: Keyword.t()) ::
+  {:ok, t()} | {:error, Exception.t()}
+
+Reads an IPC file into a dataframe.
+
+It accepts a filename that can be a local file, a "s3://" schema, or a FSS entry like FSS.S3.Entry.
+Options
+
+    :columns - List with the name or index of columns to be selected. Defaults to all columns.
+
+    :config - An optional struct, keyword list or map, normally associated with remote file systems. See IO section for more details. (default: nil)
+
+    :backend - The Explorer backend to use. Defaults to the value returned by Explorer.Backend.get/0.
+
+    :lazy - force the results into the lazy version of the current backend.
+
+    :node - The Erlang node to allocate the data frame on.
+
+
+```
