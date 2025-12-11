@@ -1,4 +1,7 @@
-# ExamplesOfPoT
+# Examples Of PoT
+
+Please see https://github.com/borodark/power_of_three/blob/master/README.md
+
 
 To start your Phoenix server:
 

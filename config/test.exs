@@ -15,7 +15,7 @@ config :pot_examples, Postgres.Repo,
   pool_size: System.schedulers_online() * 2
 
 config :pot_examples, Cubes.Repo,
-  port: 15432,
+  port: 13306,
   stacktrace: true,
   username: "username",
   password: "password",

@@ -90,7 +90,11 @@
 ```wlixir 
 
 """
-http://localhost:4008/#/build?query={%22dimensions%22:[%22orders.market_code%22],%22measures%22:[%22orders.count%22,%22orders.discount_and_tax%22]}
+http://localhost:4008/#/build?
+"""
+
+"""
+http://localhost:4000/cubejs-api/v1/load?query={%22dimensions%22:[%22orders.market_code%22],%22measures%22:[%22orders.count%22,%22orders.discount_and_tax%22]}
 """
 
 %FSS.HTTP.Entry{config: FSS.HTTP.Config.t(), url: String.t()}
