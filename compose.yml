@@ -28,8 +28,8 @@ services:
       CUBEJS_API_SECRET: secret
       CUBEJS_DEV_MODE: true
       CUBEJS_PG_SQL_PORT: 5432
-      DEBUG_LOG: true
-      CUBEJS_LOG_LEVEL: trace
+      #DEBUG_LOG: true
+      #CUBEJS_LOG_LEVEL: trace
     volumes:
       - ./:/cube/conf
     depends_on:
@@ -60,7 +60,12 @@ services:
   cubestore_router:
     restart: always
     image: docker.io/cubejs/cubestore:latest
+    ports:
+      - 13306:3306
     environment:
+      #CUBESTORE_LOG_LEVEL: trace
+      CUBEJS_SQL_USER: "username"
+      CUBEJS_SQL_PASSWORD: "password"
       CUBESTORE_WORKERS: cubestore_worker_1:10001,cubestore_worker_2:10002
       CUBESTORE_REMOTE_DIR: /cube/data
       CUBESTORE_META_PORT: 9999

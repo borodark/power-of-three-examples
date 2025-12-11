@@ -3,25 +3,14 @@ cubes:
   - name: of_addresses
     description: cube of addresses
     title: cube of addresses
-    sql_table: address
-    measures:
-      - name: count_of_records
-        type: count
-        description: no need for fields for :count type measure
-      - meta:
-          ecto_field: country
-          ecto_type: string
-        name: country_count
-        type: count
-        sql: country
     dimensions:
       - meta:
           ecto_field: id
           ecto_field_type: id
         name: address_id
         type: number
-        primary_key: true
         sql: id
+        primary_key: true
       - meta:
           ecto_fields:
             - brand_code
@@ -43,3 +32,14 @@ cubes:
         type: string
         description: Louzy documentation
         sql: first_name
+    measures:
+      - name: count_of_records
+        type: count
+        description: no need for fields for :count type measure
+      - meta:
+          ecto_field: country
+          ecto_type: string
+        name: country_count
+        type: count
+        sql: country
+    sql_table: address

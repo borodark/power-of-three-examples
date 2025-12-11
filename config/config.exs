@@ -9,10 +9,11 @@ import Config
 
 config :pot_examples,
   namespace: ExamplesOfPoT,
-  ecto_repos: [Postgres.Repo,Cubes.Repo],
+  ecto_repos: [Postgres.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 config :adbc, :drivers, [:postgresql]
+config :elixir_make, :force_build, adbc: true
 
 # Configures the endpoint
 config :pot_examples, ExamplesOfPoTWeb.Endpoint,

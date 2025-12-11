@@ -19,7 +19,8 @@ defmodule ExamplesOfPoT.Application do
       {Adbc.Database,
        [
          driver: :postgresql,
-         uri: "postgresql://username:password@localhost:15432/test",
+         uri: "postgresql://username:password@localhost:4444/test",
+         #uri: "postgresql://postgres:postgres@localhost:7432/pot_examples_dev",
          process_options: [name: ExamplesOfPoT.AdbcDB]
        ]},
       {Adbc.Connection,
