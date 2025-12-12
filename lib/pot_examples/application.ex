@@ -7,6 +7,9 @@ defmodule ExamplesOfPoT.Application do
 
   @impl true
   def start(_type, _args) do
+    # Get Cube pool configuration
+    cube_pool_opts = Application.get_env(:pot_examples, ExamplesOfPoT.CubePool, [])
+
     children = [
       ExamplesOfPoTWeb.Telemetry,
       Postgres.Repo,
@@ -14,20 +17,10 @@ defmodule ExamplesOfPoT.Application do
       {Phoenix.PubSub, name: ExamplesOfPoT.PubSub},
       # Start a worker by calling: ExamplesOfPoT.Worker.start_link(arg)
       # {ExamplesOfPoT.Worker, arg},
+      # Cube ADBC connection pool
+      {ExamplesOfPoT.CubePool, cube_pool_opts},
       # Start to serve requests, typically the last entry
-      ExamplesOfPoTWeb.Endpoint,
-      {Adbc.Database,
-       [
-         driver: :postgresql,
-         uri: "postgresql://username:password@localhost:4444/test",
-         #uri: "postgresql://postgres:postgres@localhost:7432/pot_examples_dev",
-         process_options: [name: ExamplesOfPoT.AdbcDB]
-       ]},
-      {Adbc.Connection,
-       [
-         database: ExamplesOfPoT.AdbcDB,
-         process_options: [name: ExamplesOfPoT.AdbcConn]
-       ]}
+      ExamplesOfPoTWeb.Endpoint
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

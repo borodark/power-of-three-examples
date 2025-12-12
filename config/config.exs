@@ -12,8 +12,17 @@ config :pot_examples,
   ecto_repos: [Postgres.Repo],
   generators: [timestamp_type: :utc_datetime]
 
-config :adbc, :drivers, [:postgresql]
-config :elixir_make, :force_build, adbc: true
+# config :elixir_make, :force_build, adbc: true
+
+# Cube ADBC connection pool configuration
+config :pot_examples, ExamplesOfPoT.CubePool,
+  pool_size: 10,
+  cube_config: [
+    driver_path: Path.expand("priv/lib/libadbc_driver_cube.so", __DIR__ |> Path.dirname()),
+    host: "localhost",
+    port: 4445,
+    token: "test"
+  ]
 
 # Configures the endpoint
 config :pot_examples, ExamplesOfPoTWeb.Endpoint,

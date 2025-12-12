@@ -3,6 +3,7 @@ cubes:
   - name: of_customers
     description: of Customers
     title: customers cube
+    sql_table: customer
     dimensions:
       - meta:
           ecto_fields:
@@ -11,8 +12,8 @@ cubes:
             - email
         name: email_per_brand_per_market
         type: string
-        sql: brand_code||market_code||email
         primary_key: true
+        sql: brand_code||market_code||email
       - meta:
           ecto_field: first_name
           ecto_field_type: string
@@ -114,4 +115,3 @@ cubes:
         filters:
           - sql: (birthday_month = 1 AND birthday_day >= 20) OR (birthday_month = 2 AND birthday_day <= 18)
         sql: email
-    sql_table: customer

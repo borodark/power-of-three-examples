@@ -35,6 +35,7 @@ defmodule ExamplesOfPoT.MixProject do
       {:power_of_3, github: "borodark/power_of_three", branch: "master"},
       {:adbc, github: "borodark/adbc", branch: "feature/cube-driver", override: true},
       {:explorer, "~> 0.11.1"},
+      {:faker, "~> 0.18"},
       {:recon, "~> 2.5"},
       {:phoenix, "~> 1.7.21"},
       {:phoenix_ecto, "~> 4.5"},
@@ -62,7 +63,6 @@ defmodule ExamplesOfPoT.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.5"},
       {:credo, "~> 1.7", only: [:dev, :test]}
-
     ]
   end
 

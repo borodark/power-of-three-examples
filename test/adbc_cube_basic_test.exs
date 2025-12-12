@@ -2,6 +2,7 @@ defmodule Adbc.CubeBasicTest do
   use ExUnit.Case, async: true
 
   alias Adbc.{Connection, Result, Column}
+  alias ExamplesOfPoT.CubePool
 
   @moduletag :cube
   @moduletag timeout: 30_000
@@ -44,22 +45,7 @@ defmodule Adbc.CubeBasicTest do
   end
 
   setup do
-    # Start database with custom Cube driver
-    # Note: All options must use the "adbc.cube.*" prefix
-    db =
-      start_supervised!(
-        {Adbc.Database,
-         driver: @cube_driver_path,
-         "adbc.cube.host": @cube_host,
-         "adbc.cube.port": Integer.to_string(@cube_port),
-         "adbc.cube.connection_mode": "native",
-         "adbc.cube.token": @cube_token}
-      )
-
-    # Start connection
-    conn = start_supervised!({Connection, database: db})
-
-    %{db: db, conn: conn}
+    %{conn: CubePool.get_connection()}
   end
 
   describe "basic connectivity" do
@@ -154,24 +140,50 @@ defmodule Adbc.CubeBasicTest do
 
   describe "Cube queries" do
     test "queries Cube dimension", %{conn: conn} do
-      query = """
-      SELECT
-      orders.FUL,
-      MEASURE(orders.count),
-      MEASURE(orders.subtotal_amount),
-      MEASURE(orders.total_amount),
-      MEASURE(orders.tax_amount)
-      FROM
-      orders
-      GROUP BY
-      1
-      """
+      queries = [
+        """
+        SELECT
+        orders.FUL,
+        MEASURE(orders.count),
+        MEASURE(orders.subtotal_amount),
+        MEASURE(orders.total_amount),
+        MEASURE(orders.tax_amount)
+        FROM
+        orders
+        GROUP BY
+        1
+        """,
+        """
+        SELECT
+        orders.FIN,
+        orders.FUL,
+        MEASURE(orders.count),
+        MEASURE(orders.subtotal_amount),
+        MEASURE(orders.total_amount),
+        MEASURE(orders.tax_amount)
+        FROM
+        orders
+        GROUP BY
+        1,
+        2
+        """,
+        """
+        SELECT
+        of_addresses.kind,
+        of_addresses.given_name,
+        MEASURE(of_addresses.country_count)
+        FROM
+        of_addresses
+        GROUP BY
+        1,
+        2
+        """
+      ]
 
-      assert {:ok, results} = Connection.query(conn, query)
-
-      IO.inspect(Result.materialize(results))
-      df = Explorer.DataFrame.from_query(conn, query,[])
-      IO.inspect(df)
+      for query <- queries do
+        df = Explorer.DataFrame.from_query(conn, query, [])
+        IO.inspect(df)
+      end
     end
   end
 end
