@@ -177,7 +177,54 @@ defmodule Adbc.CubeBasicTest do
         GROUP BY
         1,
         2
+        """,
         """
+        SELECT
+        of_addresses.kind,
+        of_addresses.country_bm,
+        MEASURE(of_addresses.count_of_records)
+        FROM
+        of_addresses
+        GROUP BY
+        1,
+        2
+        """,
+        """
+        SELECT
+        orders.FUL,
+        orders.brand,
+        orders.market_code,
+        MEASURE(orders.count),
+        MEASURE(orders.subtotal_amount),
+        MEASURE(orders.total_amount)
+        FROM
+        orders
+        GROUP BY
+        1,
+        2,
+        3
+        """,
+        """
+        SELECT
+        of_customers.zodiac,
+        of_customers.brand,
+        MEASURE(of_customers.emails_distinct)
+        FROM
+        of_customers
+        GROUP BY
+        1,
+        2
+        """,
+        """
+        SELECT
+        of_addresses.given_name,
+        MEASURE(of_addresses.count_of_records)
+        FROM
+        of_addresses
+        GROUP BY
+        1
+        """
+
       ]
 
       for query <- queries do
