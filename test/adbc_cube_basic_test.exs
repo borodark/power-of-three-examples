@@ -7,13 +7,11 @@ defmodule Adbc.CubeBasicTest do
   @moduletag timeout: 30_000
 
   # Path to our custom-built Cube driver
-  @cube_driver_path Path.join(:code.priv_dir(:adbc),"lib/libadbc_driver_cube.so")
-
+  @cube_driver_path Path.join(:code.priv_dir(:adbc), "lib/libadbc_driver_cube.so")
 
   # Cube server connection details
   @cube_host "localhost"
   @cube_port 4445
-  @cube_token "test"
 
   setup_all do
     # Check if the Cube driver library exists
@@ -41,25 +39,12 @@ defmodule Adbc.CubeBasicTest do
         raise "Failed to connect to Cube server: #{inspect(reason)}"
     end
 
-    # Start connection pool for all tests
-    pool_opts = [
-      pool_size: 4,
-      driver_path: @cube_driver_path,
-      host: @cube_host,
-      port: @cube_port,
-      token: @cube_token
-    ]
-
-    {:ok, _pid} = start_supervised({Adbc.CubeTestPool, pool_opts})
-
     :ok
   end
 
   setup do
     # Get a connection from the pool for this test
-    conn = Adbc.CubeTestPool.get_connection()
-
-    %{conn: conn}
+    %{conn: Adbc.CubePool.get_connection()}
   end
 
   describe "basic connectivity" do
@@ -154,36 +139,54 @@ defmodule Adbc.CubeBasicTest do
 
   describe "Cube queries" do
     test "queries Cube dimension", %{conn: conn} do
-      query = """
-      SELECT
-      orders.FUL,
-      MEASURE(orders.count),
-      MEASURE(orders.subtotal_amount),
-      MEASURE(orders.total_amount),
-      MEASURE(orders.tax_amount)
-      FROM
-      orders
-      GROUP BY
-      1
-      """
+      queries = [
+        """
+        SELECT
+        orders.FUL,
+        MEASURE(orders.count),
+        MEASURE(orders.subtotal_amount),
+        MEASURE(orders.total_amount),
+        MEASURE(orders.tax_amount)
+        FROM
+        orders
+        GROUP BY
+        1
+        """,
+        """
+        SELECT
+        orders.order_id,
+        MEASURE(orders.total_amount),
+        MEASURE(orders.tax_amount)
+        FROM
+        orders
+        GROUP BY
+        1
+        LIMIT 40000
+        """
+        # LIMIT 541189
+      ]
 
-      assert {:ok, results} = Connection.query(conn, query)
-
-      IO.inspect(Result.materialize(results))
-      # df = DataFrame.from_query(conn, query,[])
-      # IO.inspect(df)
+      for query <- queries do
+        assert {:ok, results} = Connection.query(conn, query)
+        m_zd = Result.materialize(results)
+        [col1 | _] = m_zd.data
+        IO.inspect(col1.data)
+        IO.inspect(Enum.count(col1.data))
+        # df = DataFrame.from_query(conn, query,[])
+        # IO.inspect(df)
+      end
     end
   end
 
   describe "connection pool" do
     test "pool provides multiple connections" do
-      pool_size = Adbc.CubeTestPool.get_pool_size()
-      assert pool_size == 4
+      pool_size = Adbc.CubePool.get_pool_size()
+      assert pool_size == 10
     end
 
     test "can get specific connection from pool" do
-      conn1 = Adbc.CubeTestPool.get_connection(1)
-      conn2 = Adbc.CubeTestPool.get_connection(2)
+      conn1 = Adbc.CubePool.get_connection(1)
+      conn2 = Adbc.CubePool.get_connection(2)
 
       assert is_pid(conn1)
       assert is_pid(conn2)
@@ -195,7 +198,7 @@ defmodule Adbc.CubeBasicTest do
       tasks =
         for i <- 1..10 do
           Task.async(fn ->
-            conn = Adbc.CubeTestPool.get_connection()
+            conn = Adbc.CubePool.get_connection()
             Connection.query(conn, "SELECT #{i} as num")
           end)
         end

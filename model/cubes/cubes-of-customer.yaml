@@ -11,8 +11,8 @@ cubes:
             - email
         name: email_per_brand_per_market
         type: string
-        sql: brand_code||market_code||email
         primary_key: true
+        sql: brand_code||market_code||email
       - meta:
           ecto_field: first_name
           ecto_field_type: string
@@ -99,15 +99,15 @@ cubes:
         type: count
         description: no need for fields for :count type measure
       - meta:
-          ecto_field: email
           ecto_type: string
+          ecto_field: email
         name: emails_distinct
         type: count_distinct
         description: count distinct of emails
         sql: email
       - meta:
-          ecto_field: email
           ecto_type: string
+          ecto_field: email
         name: aquarii
         type: count_distinct
         description: Filtered by start sector = 0

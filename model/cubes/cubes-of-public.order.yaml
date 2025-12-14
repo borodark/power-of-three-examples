@@ -9,8 +9,8 @@ cubes:
           ecto_field_type: id
         name: order_id
         type: number
-        sql: id
         primary_key: true
+        sql: id
       - meta:
           ecto_field: financial_status
           ecto_field_type: string
@@ -37,27 +37,27 @@ cubes:
         sql: brand_code
     measures:
       - meta:
-          ecto_field: subtotal_amount
           ecto_type: integer
+          ecto_field: subtotal_amount
         name: subtotal_amount
         type: avg
         sql: subtotal_amount
       - meta:
-          ecto_field: tax_amount
           ecto_type: integer
+          ecto_field: tax_amount
         name: tax_amount
         type: sum
         format: currency
         sql: tax_amount
       - meta:
-          ecto_field: total_amount
           ecto_type: integer
+          ecto_field: total_amount
         name: total_amount
         type: sum
         sql: total_amount
       - meta:
-          ecto_field: discount_total_amount
           ecto_type: integer
+          ecto_field: discount_total_amount
         name: discount_total_amount
         type: sum
         sql: discount_total_amount

@@ -76,7 +76,8 @@ defmodule ExamplesOfPoT.CubePoolTest do
     end
 
     test "handles STRING type" do
-      assert {:ok, results} = CubePool.get_connection() |> Connection.query("SELECT 'hello cube' as greeting")
+      assert {:ok, results} =
+               CubePool.get_connection() |> Connection.query("SELECT 'hello cube' as greeting")
 
       materialized = Result.materialize(results)
 
@@ -108,7 +109,8 @@ defmodule ExamplesOfPoT.CubePoolTest do
     end
 
     test "handles DOUBLE type" do
-      assert {:ok, results} = CubePool.get_connection() |> Connection.query("SELECT 3.14159 as pi")
+      assert {:ok, results} =
+               CubePool.get_connection() |> Connection.query("SELECT 3.14159 as pi")
 
       materialized = Result.materialize(results)
 

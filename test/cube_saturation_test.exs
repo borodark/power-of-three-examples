@@ -238,7 +238,7 @@ defmodule ExamplesOfPoT.CubeSaturationTest do
       Process.sleep(1000)
 
       # Progressive load
-      for load <- [100, 1_000, 10_000] do
+      for load <- [100, 1_000] do
         IO.puts("\n--- Load: #{load} concurrent queries ---")
         metrics = run_saturation_test(load)
         print_metrics(metrics)

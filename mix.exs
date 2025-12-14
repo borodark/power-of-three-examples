@@ -9,7 +9,8 @@ defmodule ExamplesOfPoT.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      test_only: [saturation: false, cube: false, broken_server: false, saturation_1000: false]
     ]
   end
 
