@@ -2,13 +2,13 @@ defmodule Adbc.CubeBasicTest do
   use ExUnit.Case, async: true
 
   alias Adbc.{Connection, Result, Column}
-  alias ExamplesOfPoT.CubePool
 
   @moduletag :cube
   @moduletag timeout: 30_000
 
   # Path to our custom-built Cube driver
-  @cube_driver_path "priv/lib/libadbc_driver_cube.so"
+  @cube_driver_path Path.join(:code.priv_dir(:adbc),"lib/libadbc_driver_cube.so")
+
 
   # Cube server connection details
   @cube_host "localhost"
@@ -41,11 +41,25 @@ defmodule Adbc.CubeBasicTest do
         raise "Failed to connect to Cube server: #{inspect(reason)}"
     end
 
+    # Start connection pool for all tests
+    pool_opts = [
+      pool_size: 4,
+      driver_path: @cube_driver_path,
+      host: @cube_host,
+      port: @cube_port,
+      token: @cube_token
+    ]
+
+    {:ok, _pid} = start_supervised({Adbc.CubeTestPool, pool_opts})
+
     :ok
   end
 
   setup do
-    %{conn: CubePool.get_connection()}
+    # Get a connection from the pool for this test
+    conn = Adbc.CubeTestPool.get_connection()
+
+    %{conn: conn}
   end
 
   describe "basic connectivity" do
@@ -140,97 +154,71 @@ defmodule Adbc.CubeBasicTest do
 
   describe "Cube queries" do
     test "queries Cube dimension", %{conn: conn} do
-      queries = [
-        """
-        SELECT
-        orders.FUL,
-        MEASURE(orders.count),
-        MEASURE(orders.subtotal_amount),
-        MEASURE(orders.total_amount),
-        MEASURE(orders.tax_amount)
-        FROM
-        orders
-        GROUP BY
-        1
-        """,
-        """
-        SELECT
-        orders.FIN,
-        orders.FUL,
-        MEASURE(orders.count),
-        MEASURE(orders.subtotal_amount),
-        MEASURE(orders.total_amount),
-        MEASURE(orders.tax_amount)
-        FROM
-        orders
-        GROUP BY
-        1,
-        2
-        """,
-        """
-        SELECT
-        of_addresses.kind,
-        of_addresses.given_name,
-        MEASURE(of_addresses.country_count)
-        FROM
-        of_addresses
-        GROUP BY
-        1,
-        2
-        """,
-        """
-        SELECT
-        of_addresses.kind,
-        of_addresses.country_bm,
-        MEASURE(of_addresses.count_of_records)
-        FROM
-        of_addresses
-        GROUP BY
-        1,
-        2
-        """,
-        """
-        SELECT
-        orders.FUL,
-        orders.brand,
-        orders.market_code,
-        MEASURE(orders.count),
-        MEASURE(orders.subtotal_amount),
-        MEASURE(orders.total_amount)
-        FROM
-        orders
-        GROUP BY
-        1,
-        2,
-        3
-        """,
-        """
-        SELECT
-        of_customers.zodiac,
-        of_customers.brand,
-        MEASURE(of_customers.emails_distinct)
-        FROM
-        of_customers
-        GROUP BY
-        1,
-        2
-        """,
-        """
-        SELECT
-        of_addresses.given_name,
-        MEASURE(of_addresses.count_of_records)
-        FROM
-        of_addresses
-        GROUP BY
-        1
-        """
+      query = """
+      SELECT
+      orders.FUL,
+      MEASURE(orders.count),
+      MEASURE(orders.subtotal_amount),
+      MEASURE(orders.total_amount),
+      MEASURE(orders.tax_amount)
+      FROM
+      orders
+      GROUP BY
+      1
+      """
 
-      ]
+      assert {:ok, results} = Connection.query(conn, query)
 
-      for query <- queries do
-        df = Explorer.DataFrame.from_query(conn, query, [])
-        IO.inspect(df)
-      end
+      IO.inspect(Result.materialize(results))
+      # df = DataFrame.from_query(conn, query,[])
+      # IO.inspect(df)
+    end
+  end
+
+  describe "connection pool" do
+    test "pool provides multiple connections" do
+      pool_size = Adbc.CubeTestPool.get_pool_size()
+      assert pool_size == 4
+    end
+
+    test "can get specific connection from pool" do
+      conn1 = Adbc.CubeTestPool.get_connection(1)
+      conn2 = Adbc.CubeTestPool.get_connection(2)
+
+      assert is_pid(conn1)
+      assert is_pid(conn2)
+      assert conn1 != conn2
+    end
+
+    test "concurrent queries work with pool" do
+      # Run multiple queries concurrently
+      tasks =
+        for i <- 1..10 do
+          Task.async(fn ->
+            conn = Adbc.CubeTestPool.get_connection()
+            Connection.query(conn, "SELECT #{i} as num")
+          end)
+        end
+
+      results = Task.await_many(tasks, 10_000)
+
+      # All should succeed
+      assert Enum.all?(results, fn
+               {:ok, _} -> true
+               _ -> false
+             end)
+
+      # Extract values
+      values =
+        results
+        |> Enum.map(fn {:ok, result} ->
+          %Result{data: [%Column{data: [value]}]} = Result.materialize(result)
+          value
+        end)
+        |> Enum.sort()
+
+      # Should get all values 1..10
+      assert values == Enum.to_list(1..10)
     end
   end
 end

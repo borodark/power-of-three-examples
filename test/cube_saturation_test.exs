@@ -12,7 +12,7 @@ defmodule ExamplesOfPoT.CubeSaturationTest do
 
   use ExUnit.Case, async: false
 
-  alias ExamplesOfPoT.CubePool
+  alias Adbc.CubePool
   alias Adbc.{Connection, Result}
 
   @moduletag :cube
@@ -22,50 +22,135 @@ defmodule ExamplesOfPoT.CubeSaturationTest do
 
   # Sample Cube queries from test/adbc_cube_basic_test.exs
   @cube_queries [
-    # Simple dimension query
-    """
-    SELECT orders.FUL
-    FROM orders
-    GROUP BY 1
-    LIMIT 10
-    """,
-    # Dimension with single measure
-    """
-    SELECT
-      orders.FUL,
-      MEASURE(orders.count)
-    FROM orders
-    GROUP BY 1
-    LIMIT 10
-    """,
-    # Multiple measures
-    """
-    SELECT
-      orders.FUL,
-      MEASURE(orders.count),
-      MEASURE(orders.subtotal_amount),
-      MEASURE(orders.total_amount),
-      MEASURE(orders.tax_amount)
-    FROM orders
-    GROUP BY 1
-    LIMIT 10
-    """,
-    # Two dimensions with measures
-    """
-    SELECT
-      orders.FIN,
-      orders.FUL,
-      MEASURE(orders.count),
-      MEASURE(orders.subtotal_amount)
-    FROM orders
-    GROUP BY 1, 2
-    LIMIT 10
-    """,
-    # Simple SELECT
-    "SELECT 1 as test",
-    # String query
-    "SELECT 'hello' as greeting"
-  ]
+                  # Simple dimension query
+                  """
+                  SELECT orders.FUL
+                  FROM orders
+                  GROUP BY 1
+                  LIMIT 10
+                  """,
+                  # Dimension with single measure
+                  """
+                  SELECT
+                    orders.FUL,
+                    MEASURE(orders.count)
+                  FROM orders
+                  GROUP BY 1
+                  LIMIT 10
+                  """,
+                  # Multiple measures
+                  """
+                  SELECT
+                    orders.FUL,
+                    MEASURE(orders.count),
+                    MEASURE(orders.subtotal_amount),
+                    MEASURE(orders.total_amount),
+                    MEASURE(orders.tax_amount)
+                  FROM orders
+                  GROUP BY 1
+                  LIMIT 10
+                  """,
+                  # Two dimensions with measures
+                  """
+                  SELECT
+                    orders.FIN,
+                    orders.FUL,
+                    MEASURE(orders.count),
+                    MEASURE(orders.subtotal_amount)
+                  FROM orders
+                  GROUP BY 1, 2
+                  LIMIT 10
+                  """,
+                  # Simple SELECT
+                  "SELECT 1 as test",
+                  # String query
+                  "SELECT 'hello' as greeting"
+                ] ++
+                  [
+                    """
+                    SELECT
+                    orders.FUL,
+                    MEASURE(orders.count),
+                    MEASURE(orders.subtotal_amount),
+                    MEASURE(orders.total_amount),
+                    MEASURE(orders.tax_amount)
+                    FROM
+                    orders
+                    GROUP BY
+                    1
+                    """,
+                    """
+                    SELECT
+                    orders.FIN,
+                    orders.FUL,
+                    MEASURE(orders.count),
+                    MEASURE(orders.subtotal_amount),
+                    MEASURE(orders.total_amount),
+                    MEASURE(orders.tax_amount)
+                    FROM
+                    orders
+                    GROUP BY
+                    1,
+                    2
+                    """,
+                    """
+                    SELECT
+                    of_addresses.kind,
+                    of_addresses.given_name,
+                    MEASURE(of_addresses.country_count)
+                    FROM
+                    of_addresses
+                    GROUP BY
+                    1,
+                    2
+                    """,
+                    """
+                    SELECT
+                    of_addresses.kind,
+                    of_addresses.country_bm,
+                    MEASURE(of_addresses.count_of_records)
+                    FROM
+                    of_addresses
+                    GROUP BY
+                    1,
+                    2
+                    """,
+                    """
+                    SELECT
+                    orders.FUL,
+                    orders.brand,
+                    orders.market_code,
+                    MEASURE(orders.count),
+                    MEASURE(orders.subtotal_amount),
+                    MEASURE(orders.total_amount)
+                    FROM
+                    orders
+                    GROUP BY
+                    1,
+                    2,
+                    3
+                    """,
+                    """
+                    SELECT
+                    of_customers.zodiac,
+                    of_customers.brand,
+                    MEASURE(of_customers.emails_distinct)
+                    FROM
+                    of_customers
+                    GROUP BY
+                    1,
+                    2
+                    """,
+                    """
+                    SELECT
+                    of_addresses.given_name,
+                    MEASURE(of_addresses.count_of_records)
+                    FROM
+                    of_addresses
+                    GROUP BY
+                    1
+                    """
+                  ]
 
   setup_all do
     # Verify cubesqld is running

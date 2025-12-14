@@ -3,15 +3,14 @@ cubes:
   - name: orders
     description: Orders
     title: cube of orders
-    sql_table: public.order
     dimensions:
       - meta:
           ecto_field: id
           ecto_field_type: id
         name: order_id
         type: number
-        primary_key: true
         sql: id
+        primary_key: true
       - meta:
           ecto_field: financial_status
           ecto_field_type: string
@@ -69,3 +68,4 @@ cubes:
       - name: count
         type: count
     sql_alias: order_facts
+    sql_table: public.order

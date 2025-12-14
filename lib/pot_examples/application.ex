@@ -7,9 +7,6 @@ defmodule ExamplesOfPoT.Application do
 
   @impl true
   def start(_type, _args) do
-    # Get Cube pool configuration
-    cube_pool_opts = Application.get_env(:pot_examples, ExamplesOfPoT.CubePool, [])
-
     children = [
       ExamplesOfPoTWeb.Telemetry,
       Postgres.Repo,
@@ -18,7 +15,9 @@ defmodule ExamplesOfPoT.Application do
       # Start a worker by calling: ExamplesOfPoT.Worker.start_link(arg)
       # {ExamplesOfPoT.Worker, arg},
       # Cube ADBC connection pool
-      {ExamplesOfPoT.CubePool, cube_pool_opts},
+      # Get Cube pool configuration
+      {Adbc.CubePool, Application.get_env(:pot_examples, Adbc.CubePool, [])},
+
       # Start to serve requests, typically the last entry
       ExamplesOfPoTWeb.Endpoint
     ]

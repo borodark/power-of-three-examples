@@ -33,7 +33,7 @@ defmodule ExamplesOfPoT.MixProject do
   defp deps do
     [
       {:power_of_3, github: "borodark/power_of_three", branch: "master"},
-      {:adbc, github: "borodark/adbc", branch: "feature/cube-driver", override: true},
+      {:adbc, github: "borodark/adbc", branch: "cleanup-take-II", override: true},
       {:explorer, "~> 0.11.1"},
       {:faker, "~> 0.18"},
       {:recon, "~> 2.5"},
@@ -41,7 +41,6 @@ defmodule ExamplesOfPoT.MixProject do
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:myxql, "~> 0.8.0"},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 1.0"},

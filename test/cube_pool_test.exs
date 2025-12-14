@@ -1,40 +1,16 @@
 defmodule ExamplesOfPoT.CubePoolTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
-  alias ExamplesOfPoT.CubePool
+  alias Adbc.CubePool
   alias Adbc.{Connection, Result, Column}
 
   @moduletag :cube
   @moduletag timeout: 30_000
 
-  setup_all do
-    # Verify cubesqld is running
-    case :gen_tcp.connect('localhost', 4445, [:binary], 1000) do
-      {:ok, socket} ->
-        :gen_tcp.close(socket)
-        :ok
-
-      {:error, :econnrefused} ->
-        raise """
-        Cube server (cubesqld) is not running on localhost:4445.
-
-        Start it with:
-          cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
-          ./start-cube-api.sh    # Terminal 1
-          ./start-cubesqld.sh    # Terminal 2
-        """
-
-      {:error, reason} ->
-        raise "Failed to connect to Cube server: #{inspect(reason)}"
-    end
-
-    :ok
-  end
-
   describe "pool management" do
     test "pool is started with configured size" do
       pool_size = CubePool.get_pool_size()
-      expected_size = System.schedulers_online() * 2
+      expected_size = 10
       assert pool_size == expected_size
     end
 
@@ -67,7 +43,7 @@ defmodule ExamplesOfPoT.CubePoolTest do
 
   describe "query execution" do
     test "executes simple SELECT query via pool" do
-      assert {:ok, results} = CubePool.query("SELECT 1 as test")
+      assert {:ok, results} = CubePool.get_connection() |> Connection.query("SELECT 1 as test")
 
       materialized = Result.materialize(results)
 
@@ -84,7 +60,7 @@ defmodule ExamplesOfPoT.CubePoolTest do
     end
 
     test "executes query with different values" do
-      assert {:ok, results} = CubePool.query("SELECT 42 as answer")
+      assert {:ok, results} = CubePool.get_connection() |> Connection.query("SELECT 42 as answer")
 
       materialized = Result.materialize(results)
 
@@ -100,7 +76,7 @@ defmodule ExamplesOfPoT.CubePoolTest do
     end
 
     test "handles STRING type" do
-      assert {:ok, results} = CubePool.query("SELECT 'hello cube' as greeting")
+      assert {:ok, results} = CubePool.get_connection() |> Connection.query("SELECT 'hello cube' as greeting")
 
       materialized = Result.materialize(results)
 
@@ -116,7 +92,7 @@ defmodule ExamplesOfPoT.CubePoolTest do
     end
 
     test "handles BOOLEAN type" do
-      assert {:ok, results} = CubePool.query("SELECT true as flag")
+      assert {:ok, results} = CubePool.get_connection() |> Connection.query("SELECT true as flag")
 
       materialized = Result.materialize(results)
 
@@ -132,7 +108,7 @@ defmodule ExamplesOfPoT.CubePoolTest do
     end
 
     test "handles DOUBLE type" do
-      assert {:ok, results} = CubePool.query("SELECT 3.14159 as pi")
+      assert {:ok, results} = CubePool.get_connection() |> Connection.query("SELECT 3.14159 as pi")
 
       materialized = Result.materialize(results)
 
@@ -158,7 +134,7 @@ defmodule ExamplesOfPoT.CubePoolTest do
       tasks =
         for i <- 1..10 do
           Task.async(fn ->
-            CubePool.query("SELECT #{i} as num")
+            CubePool.get_connection() |> Connection.query("SELECT #{i} as num")
           end)
         end
 

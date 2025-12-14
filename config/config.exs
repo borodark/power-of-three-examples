@@ -15,14 +15,13 @@ config :pot_examples,
 # config :elixir_make, :force_build, adbc: true
 
 # Cube ADBC connection pool configuration
-config :pot_examples, ExamplesOfPoT.CubePool,
+config :pot_examples, Adbc.CubePool,
   pool_size: 10,
-  cube_config: [
-    driver_path: Path.expand("priv/lib/libadbc_driver_cube.so", __DIR__ |> Path.dirname()),
-    host: "localhost",
-    port: 4445,
-    token: "test"
-  ]
+  host: "localhost",
+  port: 4445,
+  token: "test",
+  username: "username",
+  password: "password"
 
 # Configures the endpoint
 config :pot_examples, ExamplesOfPoTWeb.Endpoint,
