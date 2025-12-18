@@ -3,6 +3,7 @@ cubes:
   - name: of_addresses
     description: Addresses
     title: of addresses
+    sql_table: address
     dimensions:
       - meta:
           ecto_field: id
@@ -49,9 +50,8 @@ cubes:
         type: count
         description: no need for fields for :count type measure
       - meta:
-          ecto_type: string
           ecto_field: country
+          ecto_type: string
         name: country_count
         type: count
         sql: country
-    sql_table: address
