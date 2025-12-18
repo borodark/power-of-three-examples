@@ -4,6 +4,7 @@ cubes:
     description: Orders
     title: cube of orders
     sql_table: public.order
+    sql_alias: order_facts
     dimensions:
       - meta:
           ecto_field: id
@@ -68,4 +69,3 @@ cubes:
         sql: sum(discount_total_amount + tax_amount)
       - name: count
         type: count
-    sql_alias: order_facts

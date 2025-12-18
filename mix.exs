@@ -34,7 +34,8 @@ defmodule ExamplesOfPoT.MixProject do
   defp deps do
     [
       {:power_of_3, path: "../power-of-three"},
-      {:adbc, github: "borodark/adbc", branch: "cleanup-take-II", override: true},
+      {:adbc, path: "../adbc", override: true},
+      # {:adbc, github: "borodark/adbc", branch: "cleanup-take-II", override: true},
       {:explorer, "~> 0.11.1"},
       {:faker, "~> 0.18"},
       {:recon, "~> 2.5"},

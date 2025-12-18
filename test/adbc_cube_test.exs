@@ -328,15 +328,15 @@ defmodule Adbc.CubeTest do
     # @tag :todo
     test "handles invalid SQL syntax", %{conn: conn} do
       assert {:error, error} = Connection.query(conn, "SELECT * FORM invalid_table")
-
+      error |> IO.inspect(limit: :infinity)
       assert Exception.message(error) =~ ~r/syntax|parse|error/i
     end
 
-    #@tag :todo
+    # @tag :todo
     test "handles non-existent table", %{conn: conn} do
       # TODO implement error handling on cube side
       assert {:error, error} = Connection.query(conn, "SELECT 1 FROM non_existent_table")
-
+      error |> IO.inspect(limit: :infinity)
       assert Exception.message(error) =~ ~r/table|not found|exist/i
     end
   end
@@ -364,7 +364,7 @@ defmodule Adbc.CubeTest do
     test "handles concurrent queries" do
       # Run queries concurrently
       tasks =
-      for conn <- 1..3 |> Enum.map(&Adbc.CubePool.get_connection/1) do
+        for conn <- 1..3 |> Enum.map(&Adbc.CubePool.get_connection/1) do
           Task.async(fn ->
             Connection.query(conn, "SELECT of_customers.brand FROM of_customers LIMIT 10")
           end)

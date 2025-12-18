@@ -24,7 +24,7 @@ config :pot_examples, PowerOfThree.CubeConnection,
 
 # Cube ADBC connection pool configuration
 config :pot_examples, Adbc.CubePool,
-  pool_size: 10,
+  pool_size: 44,
   host: "localhost",
   port: 4445,
   token: "test",

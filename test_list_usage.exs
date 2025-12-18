@@ -18,11 +18,13 @@ zodiac = Enum.find(dimensions, fn d -> d.name == :zodiac end)
 count = Enum.find(measures, fn m -> m.name == "count" or m.name == :count end)
 
 IO.puts("\nBuilding SQL query using items from lists...")
-sql = PowerOfThree.QueryBuilder.build(
-  cube: "customer",
-  columns: [brand, zodiac, count],
-  limit: 5
-)
+
+sql =
+  PowerOfThree.QueryBuilder.build(
+    cube: "customer",
+    columns: [brand, zodiac, count],
+    limit: 5
+  )
 
 IO.puts("\nGenerated SQL:")
 IO.puts(sql)

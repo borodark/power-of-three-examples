@@ -62,9 +62,9 @@ defmodule PotExamples.Address do
       :kind,
       name: :kind
     )
-    dimension(
-      :postal_code
-    )
+
+    dimension(:postal_code)
+
     dimension(
       :first_name,
       name: :given_name,

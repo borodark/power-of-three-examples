@@ -10,7 +10,7 @@ defmodule ExamplesOfPoT.CubePoolTest do
   describe "pool management" do
     test "pool is started with configured size" do
       pool_size = CubePool.get_pool_size()
-      expected_size = 10
+      expected_size = 44
       assert pool_size == expected_size
     end
 

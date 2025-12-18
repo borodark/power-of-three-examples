@@ -82,7 +82,17 @@ defmodule PotExamples.AccessorListTest do
         # Each measure should have required fields
         assert is_atom(meas.name) or is_binary(meas.name)
         assert meas.module == Customer
-        assert meas.type in [:count, :count_distinct, :count_distinct_approx, :sum, :avg, :min, :max, :number]
+
+        assert meas.type in [
+                 :count,
+                 :count_distinct,
+                 :count_distinct_approx,
+                 :sum,
+                 :avg,
+                 :min,
+                 :max,
+                 :number
+               ]
       end)
     end
   end
@@ -125,11 +135,12 @@ defmodule PotExamples.AccessorListTest do
       assert brand != nil
 
       # Should be usable in QueryBuilder
-      sql = PowerOfThree.QueryBuilder.build(
-        cube: "customer",
-        columns: [brand],
-        limit: 1
-      )
+      sql =
+        PowerOfThree.QueryBuilder.build(
+          cube: "customer",
+          columns: [brand],
+          limit: 1
+        )
 
       assert sql =~ "customer.brand"
     end
@@ -141,11 +152,12 @@ defmodule PotExamples.AccessorListTest do
       assert count != nil
 
       # Should be usable in QueryBuilder
-      sql = PowerOfThree.QueryBuilder.build(
-        cube: "customer",
-        columns: [count],
-        limit: 1
-      )
+      sql =
+        PowerOfThree.QueryBuilder.build(
+          cube: "customer",
+          columns: [count],
+          limit: 1
+        )
 
       assert sql =~ "MEASURE(customer.count)"
     end
@@ -158,11 +170,12 @@ defmodule PotExamples.AccessorListTest do
       zodiac = Enum.find(dimensions, fn d -> d.name == :zodiac end)
       count = Enum.find(measures, fn m -> m.name == "count" or m.name == :count end)
 
-      sql = PowerOfThree.QueryBuilder.build(
-        cube: "customer",
-        columns: [brand, zodiac, count],
-        limit: 5
-      )
+      sql =
+        PowerOfThree.QueryBuilder.build(
+          cube: "customer",
+          columns: [brand, zodiac, count],
+          limit: 5
+        )
 
       assert sql =~ "customer.brand"
       assert sql =~ "customer.zodiac"

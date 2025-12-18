@@ -37,6 +37,7 @@ IO.puts("  Count measure: #{inspect(count_measure)}")
 
 # Test 3: Build a query using QueryBuilder
 IO.puts("\nTest 3: Building SQL query...")
+
 columns = [
   Customer.dimensions().brand(),
   Customer.dimensions().zodiac(),
@@ -44,11 +45,12 @@ columns = [
   Customer.measures().aquarii()
 ]
 
-sql = PowerOfThree.QueryBuilder.build(
-  cube: "customer",
-  columns: columns,
-  limit: 10
-)
+sql =
+  PowerOfThree.QueryBuilder.build(
+    cube: "customer",
+    columns: columns,
+    limit: 10
+  )
 
 IO.puts("Generated SQL:")
 IO.puts(sql)
@@ -79,6 +81,7 @@ case PowerOfThree.CubeConnection.connect(conn_opts) do
 
     # Test 5: Execute raw query
     IO.puts("\nTest 5: Executing raw query...")
+
     case PowerOfThree.CubeConnection.query(conn, "SELECT 1 as test") do
       {:ok, result} ->
         IO.puts("✓ Raw query executed successfully")
@@ -92,6 +95,7 @@ case PowerOfThree.CubeConnection.connect(conn_opts) do
 
     # Test 6: Execute Cube query
     IO.puts("\nTest 6: Executing Cube query...")
+
     cube_sql = """
     SELECT
       of_customers.brand,

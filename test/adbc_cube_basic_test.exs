@@ -194,12 +194,12 @@ defmodule Adbc.CubeBasicTest do
       ]
 
       for query <- queries do
-        assert {:ok, results} = Connection.query(conn,query)
+        assert {:ok, results} = Connection.query(conn, query)
         m_zd = Result.materialize(results)
         [col1 | _] = m_zd.data
         IO.inspect(col1.data)
         IO.inspect(Enum.count(col1.data))
-        df = DataFrame.from_query!(conn, query,[])
+        df = DataFrame.from_query!(conn, query, [])
         IO.inspect(df)
       end
     end
@@ -208,7 +208,7 @@ defmodule Adbc.CubeBasicTest do
   describe "connection pool" do
     test "pool provides multiple connections" do
       pool_size = Adbc.CubePool.get_pool_size()
-      assert pool_size == 10
+      assert pool_size == 44
     end
 
     test "can get specific connection from pool" do
