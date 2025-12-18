@@ -325,14 +325,14 @@ defmodule Adbc.CubeTest do
 
   describe "error handling" do
     # TODO implement error handling on cube side
-    @tag :todo
+    # @tag :todo
     test "handles invalid SQL syntax", %{conn: conn} do
       assert {:error, error} = Connection.query(conn, "SELECT * FORM invalid_table")
 
       assert Exception.message(error) =~ ~r/syntax|parse|error/i
     end
 
-    @tag :todo
+    #@tag :todo
     test "handles non-existent table", %{conn: conn} do
       # TODO implement error handling on cube side
       assert {:error, error} = Connection.query(conn, "SELECT 1 FROM non_existent_table")

@@ -14,6 +14,14 @@ config :pot_examples,
 
 # config :elixir_make, :force_build, adbc: true
 
+# Cube connection configuration
+config :pot_examples, PowerOfThree.CubeConnection,
+  host: "localhost",
+  port: 4445,
+  token: "test",
+  username: "username",
+  password: "password"
+
 # Cube ADBC connection pool configuration
 config :pot_examples, Adbc.CubePool,
   pool_size: 10,

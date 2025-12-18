@@ -33,7 +33,7 @@ defmodule ExamplesOfPoT.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:power_of_3, github: "borodark/power_of_three", branch: "master"},
+      {:power_of_3, path: "../power-of-three"},
       {:adbc, github: "borodark/adbc", branch: "cleanup-take-II", override: true},
       {:explorer, "~> 0.11.1"},
       {:faker, "~> 0.18"},

@@ -3,6 +3,7 @@ cubes:
   - name: orders
     description: Orders
     title: cube of orders
+    sql_table: public.order
     dimensions:
       - meta:
           ecto_field: id
@@ -37,27 +38,27 @@ cubes:
         sql: brand_code
     measures:
       - meta:
-          ecto_type: integer
           ecto_field: subtotal_amount
+          ecto_type: integer
         name: subtotal_amount
         type: avg
         sql: subtotal_amount
       - meta:
-          ecto_type: integer
           ecto_field: tax_amount
+          ecto_type: integer
         name: tax_amount
         type: sum
         format: currency
         sql: tax_amount
       - meta:
-          ecto_type: integer
           ecto_field: total_amount
+          ecto_type: integer
         name: total_amount
         type: sum
         sql: total_amount
       - meta:
-          ecto_type: integer
           ecto_field: discount_total_amount
+          ecto_type: integer
         name: discount_total_amount
         type: sum
         sql: discount_total_amount
@@ -68,4 +69,3 @@ cubes:
       - name: count
         type: count
     sql_alias: order_facts
-    sql_table: public.order

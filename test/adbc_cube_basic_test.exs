@@ -2,6 +2,7 @@ defmodule Adbc.CubeBasicTest do
   use ExUnit.Case, async: true
 
   alias Adbc.{Connection, Result, Column}
+  alias Explorer.DataFrame
 
   @moduletag :cube
   @moduletag timeout: 30_000
@@ -142,38 +143,64 @@ defmodule Adbc.CubeBasicTest do
       queries = [
         """
         SELECT
-        orders.FUL,
-        MEASURE(orders.count),
-        MEASURE(orders.subtotal_amount),
-        MEASURE(orders.total_amount),
-        MEASURE(orders.tax_amount)
+        orders.market_code,
+        orders.brand,
+        orders.order_id,
+        MEASURE(orders.discount_and_tax)/3,
+        MEASURE(orders.total_amount)
         FROM
         orders
         GROUP BY
-        1
+        1,
+        2,
+        3
+        LIMIT
+        50000
         """,
         """
         SELECT
-        orders.order_id,
-        MEASURE(orders.total_amount),
-        MEASURE(orders.tax_amount)
+        datatypes_test.float32_col,
+        datatypes_test.bool_col,
+        datatypes_test.float64_col,
+        datatypes_test.int16_col,
+        datatypes_test.int32_col,
+        datatypes_test.int64_col,
+        datatypes_test.int8_col,
+        datatypes_test.uint16_col,
+        datatypes_test.uint32_col,
+        datatypes_test.uint64_col,
+        datatypes_test.uint8_col,
+        datatypes_test.string_col,
+        MEASURE(datatypes_test.float64_avg),
+        MEASURE(datatypes_test.int32_sum)
         FROM
-        orders
+        datatypes_test
         GROUP BY
-        1
-        LIMIT 40000
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+        LIMIT
+        10000
         """
-        # LIMIT 541189
       ]
 
       for query <- queries do
-        assert {:ok, results} = Connection.query(conn, query)
+        assert {:ok, results} = Connection.query(conn,query)
         m_zd = Result.materialize(results)
         [col1 | _] = m_zd.data
         IO.inspect(col1.data)
         IO.inspect(Enum.count(col1.data))
-        # df = DataFrame.from_query(conn, query,[])
-        # IO.inspect(df)
+        df = DataFrame.from_query!(conn, query,[])
+        IO.inspect(df)
       end
     end
   end
