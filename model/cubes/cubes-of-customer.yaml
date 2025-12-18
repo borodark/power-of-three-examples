@@ -3,7 +3,6 @@ cubes:
   - name: of_customers
     description: of Customers
     title: customers cube
-    sql_table: customer
     dimensions:
       - meta:
           ecto_fields:
@@ -106,18 +105,19 @@ cubes:
         type: count
         description: no need for fields for :count type measure
       - meta:
-          ecto_field: email
           ecto_type: string
+          ecto_field: email
         name: emails_distinct
         type: count_distinct
         description: count distinct of emails
         sql: email
       - meta:
-          ecto_field: email
           ecto_type: string
+          ecto_field: email
         name: aquarii
         type: count_distinct
         description: Filtered by start sector = 0
         filters:
           - sql: (birthday_month = 1 AND birthday_day >= 20) OR (birthday_month = 2 AND birthday_day <= 18)
         sql: email
+    sql_table: customer
