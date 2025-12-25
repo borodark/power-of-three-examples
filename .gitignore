@@ -36,4 +36,6 @@ npm-debug.log
 /assets/node_modules/
 
 # do not care about test database
+/.cubestore//model/**
+/model/
 /.cubestore/
