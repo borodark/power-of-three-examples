@@ -45,39 +45,5 @@ defmodule PotExamples.Address do
   end
 
   cube :of_addresses,
-    sql_table: "address",
-    title: "of addresses",
-    description: "Addresses" do
-    dimension(:id,
-      name: :address_id,
-      primary_key: true
-    )
-
-    dimension(
-      [:brand_code, :market_code, :country],
-      name: :country_bm
-    )
-
-    dimension(
-      :kind,
-      name: :kind
-    )
-
-    dimension(:postal_code)
-
-    dimension(
-      :first_name,
-      name: :given_name,
-      description: "Louzy documentation"
-    )
-
-    time_dimensions()
-
-    measure(:count,
-      name: :count_of_records,
-      description: "no need for fields for :count type measure"
-    )
-
-    measure(:country, type: :count, name: :country_count)
-  end
+    sql_table: "address"
 end
