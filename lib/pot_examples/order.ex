@@ -39,7 +39,7 @@ defmodule PotExamples.Order do
 
   # @schema_prefix :order_schema
 
-  schema "order" do
+  schema "public.order" do
     field(:delivery_subtotal_amount, :integer, default: 0)
     field(:discount_total_amount, :integer, default: 0)
     field(:email, :string)
@@ -64,9 +64,9 @@ defmodule PotExamples.Order do
     timestamps()
   end
 
-  cube :orders,
-    sql_table: "public.order",
+  cube(:orders,
     sql_alias: :order_facts,
     title: "Auto Generated Cube of orders",
     description: "AG Orders"
+  )
 end

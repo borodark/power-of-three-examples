@@ -12,21 +12,11 @@ config :pot_examples,
   ecto_repos: [Postgres.Repo],
   generators: [timestamp_type: :utc_datetime]
 
-# config :elixir_make, :force_build, adbc: true
-
-# Cube connection configuration
-config :pot_examples, PowerOfThree.CubeConnection,
-  host: "localhost",
-  port: 4445,
-  token: "test",
-  username: "username",
-  password: "password"
-
 # Cube ADBC connection pool configuration
 config :pot_examples, Adbc.CubePool,
   pool_size: 44,
   host: "localhost",
-  port: 4445,
+  port: 8120,
   token: "test",
   username: "username",
   password: "password"

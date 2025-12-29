@@ -12,7 +12,7 @@ defmodule Adbc.CubeBasicTest do
 
   # Cube server connection details
   @cube_host "localhost"
-  @cube_port 4445
+  @cube_port 8120
 
   setup_all do
     # Check if the Cube driver library exists
@@ -29,11 +29,6 @@ defmodule Adbc.CubeBasicTest do
       {:error, :econnrefused} ->
         raise """
         Cube server (cubesqld) is not running on #{@cube_host}:#{@cube_port}.
-
-        Start it with:
-          cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
-          ./start-cube-api.sh    # Terminal 1
-          ./start-cubesqld.sh    # Terminal 2
         """
 
       {:error, reason} ->
@@ -143,19 +138,20 @@ defmodule Adbc.CubeBasicTest do
       queries = [
         """
         SELECT
-        orders.market_code,
-        orders.brand,
-        orders.order_id,
-        MEASURE(orders.discount_and_tax)/3,
-        MEASURE(orders.total_amount)
+        orders_with_preagg.brand_code,
+        orders_with_preagg.market_code,
+        DATE_TRUNC('week', orders_with_preagg.updated_at),
+        MEASURE(orders_with_preagg.subtotal_amount_sum),
+        MEASURE(orders_with_preagg.total_amount_sum),
+        MEASURE(orders_with_preagg.tax_amount_sum),
+        MEASURE(orders_with_preagg.count)
         FROM
-        orders
+        orders_with_preagg
         GROUP BY
         1,
         2,
         3
-        LIMIT
-        50000
+        LIMIT 50000
         """,
         """
         SELECT

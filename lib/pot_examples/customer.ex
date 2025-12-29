@@ -24,7 +24,6 @@ defmodule PotExamples.Customer do
   end
 
   cube :of_customers,
-    sql_table: "customer",
     title: "customers cube",
     description: "of Customers" do
     dimension(

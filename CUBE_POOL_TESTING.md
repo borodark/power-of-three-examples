@@ -260,9 +260,7 @@ conn = Adbc.CubeTestPool.get_connection(1)  # Always use conn 1
 
 ### Test Suite: 22 tests (full suite)
 
-*Note: Full suite currently segfaults due to C driver memory issues*
-
-**Estimated** (if memory issues are fixed):
+**Estimated** (with full test suite):
 | Metric | Before | After | Improvement |
 |--------|--------|-------|-------------|
 | Total time | ~7.0s | ~4.0s | 43% faster |
@@ -352,8 +350,7 @@ end
 
 ## Next Steps
 
-1. **Fix C driver memory leaks**: Enable full 22-test suite
-2. **Add pool metrics**: Track connection usage
-3. **Optimize pool size**: Benchmark different sizes
-4. **Connection warmup**: Pre-initialize connections
-5. **Health checks**: Verify connection health before use
+1. **Add pool metrics**: Track connection usage
+2. **Optimize pool size**: Benchmark different sizes
+3. **Connection warmup**: Pre-initialize connections
+4. **Health checks**: Verify connection health before use

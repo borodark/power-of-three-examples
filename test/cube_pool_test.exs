@@ -185,11 +185,11 @@ defmodule ExamplesOfPoT.CubePoolTest do
       queries = [
         """
         SELECT
-        orders.FUL,
+        orders.market_code,
         MEASURE(orders.count),
-        MEASURE(orders.subtotal_amount),
-        MEASURE(orders.total_amount),
-        MEASURE(orders.tax_amount)
+        MEASURE(orders.subtotal_amount_sum),
+        MEASURE(orders.total_amount_sum),
+        MEASURE(orders.tax_amount_sum)
         FROM
         orders
         GROUP BY
@@ -197,12 +197,12 @@ defmodule ExamplesOfPoT.CubePoolTest do
         """,
         """
         SELECT
-        orders.FIN,
-        orders.FUL,
+        orders.market_code,
+        orders.brand_code,
         MEASURE(orders.count),
-        MEASURE(orders.subtotal_amount),
-        MEASURE(orders.total_amount),
-        MEASURE(orders.tax_amount)
+        MEASURE(orders.subtotal_amount_sum),
+        MEASURE(orders.total_amount_sum),
+        MEASURE(orders.tax_amount_sum)
         FROM
         orders
         GROUP BY

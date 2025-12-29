@@ -14,7 +14,6 @@ defmodule PowerOfThree.Customer do
   end
 
   cube :power_customers,
-    sql_table: "customer",
     title: "customers cube",
     description: "of Customers" do
     dimension(:first_name, name: :given_name, description: "good documentation")

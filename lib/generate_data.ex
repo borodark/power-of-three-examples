@@ -112,6 +112,7 @@ defmodule GenerateData do
     |> Stream.chunk_every(order_max_batch_size())
     |> Enum.map(fn batch -> Repo.insert_all(Order, batch) end)
     |> Enum.to_list()
+    |> Enum.count()
   end
 
   def addressez do
@@ -193,11 +194,11 @@ defmodule GenerateData do
       total_amount: Faker.random_between(0, 5599),
       customer_id: customer_id,
       inserted_at:
-        Faker.DateTime.backward(Faker.random_between(0, 365))
+        Faker.DateTime.backward(Faker.random_between(365, 3650))
         |> DateTime.to_naive()
         |> NaiveDateTime.truncate(:second),
       updated_at:
-        Faker.DateTime.backward(Faker.random_between(0, 100))
+        Faker.DateTime.backward(Faker.random_between(365, 3650))
         |> DateTime.to_naive()
         |> NaiveDateTime.truncate(:second)
     }

@@ -2,11 +2,14 @@
 
 Python ADBC driver for Cube.js with Arrow Native Protocol support.
 
+> **📌 Recommendation:** Use Arrow Native protocol (port 4445) for production use.
+> PostgreSQL wire protocol (port 4444) is provided for legacy compatibility only.
+
 ## Features
 
 - **Dual Protocol Support**:
-  - PostgreSQL wire protocol (default, backward compatible)
-  - Arrow Native protocol (high-performance Arrow IPC streaming)
+  - **Arrow Native protocol (recommended)** - High-performance Arrow IPC streaming
+  - PostgreSQL wire protocol - Legacy compatibility
 - **Zero-copy data transfer** with Arrow Native protocol
 - **Standard ADBC interface** compatible with all ADBC tools
 - **PyArrow integration** for native Arrow tables
@@ -51,7 +54,10 @@ with db.cursor() as cur:
     print(df.head())
 ```
 
-### PostgreSQL Protocol (Default)
+### PostgreSQL Protocol (Legacy Compatibility)
+
+> **Note:** PostgreSQL wire protocol is provided for backward compatibility.
+> For new applications, use Arrow Native protocol above.
 
 ```python
 import adbc_driver_cube as cube

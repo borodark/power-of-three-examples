@@ -11,7 +11,7 @@ defmodule Adbc.CubeTest do
 
   # Cube server connection details
   @cube_host "localhost"
-  @cube_port 4445
+  @cube_port 8120
 
   setup_all do
     # Check if the Cube driver library exists

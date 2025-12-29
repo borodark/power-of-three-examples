@@ -189,9 +189,10 @@ cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
 
 Wait for:
 ```
-🔗 Cube SQL (pg) is listening on 0.0.0.0:4444
 🔗 Cube SQL (arrow) is listening on 0.0.0.0:4445
 ```
+
+**Note**: cubesqld also listens on port 4444 (PostgreSQL wire protocol) for legacy compatibility, but we only use the Arrow Native protocol (port 4445).
 
 ### 3. Start the Application
 
