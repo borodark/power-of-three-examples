@@ -12,6 +12,18 @@ config :pot_examples,
   ecto_repos: [Postgres.Repo],
   generators: [timestamp_type: :utc_datetime]
 
+config :pot_examples, Postgres.Repo,
+  port: 7432,
+  stacktrace: true,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "pot_examples_dev",
+  ownership_timeout: 300_000,
+  #  disable_composite_types: true,
+  pool_size: System.schedulers_online() * 2
+
+
 # Cube ADBC connection pool configuration
 config :pot_examples, Adbc.CubePool,
   pool_size: 44,

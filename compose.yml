@@ -2,7 +2,7 @@ services:
   postgresql:
     image: docker.io/postgres:alpine
     restart: always
-    command: -c 'max_connections=1024'
+    command: -c 'max_connections=1024' -c 'shared_buffers=32GB'
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -13,11 +13,18 @@ services:
 
   cube_api:
     restart: always
-    image: docker.io/cubejs/cube:latest
+    image: octanix/cube:dev #docker.io/cubejs/cube:latest
     ports:
       - 4008:4000
-      - 15432:5432
+      - 15432:15432
+      - 8120:8120
+      - 4445:4445
     environment:
+      CUBEJS_DB_QUERY_TIMEOUT: 60m
+      CUBEJS_CONCURRENCY: 20
+      CUBEJS_PG_SQL_PORT: 15432
+      CUBEJS_ADBC_PORT: 8120
+      CUBEJS_SQL_PORT: 4445
       CUBEJS_DB_TYPE: postgres
       CUBEJS_DB_PORT: 5432
       CUBEJS_DB_NAME: pot_examples_dev
@@ -27,9 +34,9 @@ services:
       CUBEJS_CUBESTORE_HOST: cubestore_router
       CUBEJS_API_SECRET: secret
       CUBEJS_DEV_MODE: true
-      CUBEJS_PG_SQL_PORT: 5432
       #DEBUG_LOG: true
-      #CUBEJS_LOG_LEVEL: trace
+      CUBESQL_LOG_LEVEL: trace
+      CUBEJS_LOG_LEVEL: error
     volumes:
       - ./:/cube/conf
     depends_on:
@@ -41,8 +48,10 @@ services:
 
   cube_refresh_worker:
     restart: always
-    image: docker.io/cubejs/cube:latest
+    image: octanix/cube:dev #docker.io/cubejs/cube:latest
     environment:
+      CUBEJS_DB_QUERY_TIMEOUT: 60m
+      CUBEJS_REFRESH_WORKER_CONCURRENCY: 10
       CUBEJS_DB_TYPE: postgres
       CUBEJS_DB_PORT: 5432
       CUBEJS_DB_NAME: pot_examples_dev
@@ -59,11 +68,11 @@ services:
 
   cubestore_router:
     restart: always
-    image: docker.io/cubejs/cubestore:latest
+    image: borodark/cubestore:dev #docker.io/cubejs/cubestore:latest
     ports:
-      - 13306:3306
+      - 3306:3306
     environment:
-      #CUBESTORE_LOG_LEVEL: trace
+      CUBESTORE_LOG_LEVEL: info
       CUBEJS_SQL_USER: "username"
       CUBEJS_SQL_PASSWORD: "password"
       CUBESTORE_WORKERS: cubestore_worker_1:10001,cubestore_worker_2:10002
@@ -75,7 +84,7 @@ services:
 
   cubestore_worker_1:
     restart: always
-    image: docker.io/cubejs/cubestore:latest
+    image: borodark/cubestore:dev #docker.io/cubejs/cubestore:latest
     environment:
       CUBESTORE_WORKERS: cubestore_worker_1:10001,cubestore_worker_2:10002
       CUBESTORE_SERVER_NAME: cubestore_worker_1:10001
@@ -89,7 +98,7 @@ services:
 
   cubestore_worker_2:
     restart: always
-    image: docker.io/cubejs/cubestore:latest
+    image: borodark/cubestore:dev # docker.io/cubejs/cubestore:latest
     environment:
       CUBESTORE_WORKERS: cubestore_worker_1:10001,cubestore_worker_2:10002
       CUBESTORE_SERVER_NAME: cubestore_worker_2:10002

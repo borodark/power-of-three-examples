@@ -39,7 +39,7 @@ defmodule PotExamples.Order do
 
   # @schema_prefix :order_schema
 
-  schema "public.order" do
+  schema "order" do
     field(:delivery_subtotal_amount, :integer, default: 0)
     field(:discount_total_amount, :integer, default: 0)
     field(:email, :string)

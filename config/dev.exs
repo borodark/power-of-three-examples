@@ -1,16 +1,5 @@
 import Config
 
-config :pot_examples, Postgres.Repo,
-  port: 7432,
-  stacktrace: true,
-  username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
-  database: "pot_examples_dev",
-  ownership_timeout: 300_000,
-  #  disable_composite_types: true,
-  pool_size: System.schedulers_online() * 2
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
