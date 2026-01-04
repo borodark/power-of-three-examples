@@ -11,6 +11,7 @@ defmodule SaturationTest do
 
   alias PowerOfThree.CubeHttpClient
   alias Adbc.{Connection, Result}
+  alias Explorer.Series
 
   @moduletag :live_cube
   @moduletag timeout: 300_000
@@ -308,7 +309,7 @@ defmodule SaturationTest do
   end
 
   # ===========================================================================
-  # Metrics Calculation
+  # Metrics Calculation (using Explorer for statistics)
   # ===========================================================================
 
   defp calculate_metrics(results, total_duration, count) do
@@ -321,43 +322,46 @@ defmodule SaturationTest do
     latencies =
       successes
       |> Enum.map(fn {:ok, latency} -> latency end)
-      |> Enum.sort()
 
     success_count = length(successes)
     failure_count = length(failures)
 
-    %{
+    # Use Explorer Series for statistics
+    stats = if latencies != [] do
+      series = Series.from_list(latencies)
+
+      %{
+        avg_latency: Series.mean(series),
+        min_latency: Series.min(series),
+        max_latency: Series.max(series),
+        std_dev: Series.standard_deviation(series),
+        p50: Series.quantile(series, 0.50),
+        p95: Series.quantile(series, 0.95),
+        p99: Series.quantile(series, 0.99),
+        variance: Series.variance(series)
+      }
+    else
+      %{
+        avg_latency: 0,
+        min_latency: 0,
+        max_latency: 0,
+        std_dev: 0,
+        p50: 0,
+        p95: 0,
+        p99: 0,
+        variance: 0
+      }
+    end
+
+    Map.merge(stats, %{
       total: count,
       successes: success_count,
       failures: failure_count,
       success_rate: success_count / count * 100,
       total_duration_ms: total_duration,
       throughput: count / (total_duration / 1000),
-      latencies: latencies,
-      avg_latency: if(latencies != [], do: Enum.sum(latencies) / length(latencies), else: 0),
-      min_latency: if(latencies != [], do: Enum.min(latencies), else: 0),
-      max_latency: if(latencies != [], do: Enum.max(latencies), else: 0),
-      p50: percentile(latencies, 50),
-      p95: percentile(latencies, 95),
-      p99: percentile(latencies, 99),
       errors: Enum.take(failures, 3)
-    }
-  end
-
-  defp percentile([], _), do: 0
-
-  defp percentile(sorted_list, p) do
-    k = (length(sorted_list) - 1) * p / 100
-    f = floor(k)
-    c = ceil(k)
-
-    if f == c do
-      Enum.at(sorted_list, round(k))
-    else
-      lower = Enum.at(sorted_list, f)
-      upper = Enum.at(sorted_list, c)
-      lower + (upper - lower) * (k - f)
-    end
+    })
   end
 
   # ===========================================================================
@@ -373,8 +377,9 @@ defmodule SaturationTest do
       Failures:          #{metrics.failures}
       Success rate:      #{round_num(metrics.success_rate)}%
 
-    Latency (milliseconds):
+    Latency (milliseconds) - Explorer Statistics:
       Average:           #{round_num(metrics.avg_latency)}ms
+      Std Dev:           #{round_num(metrics.std_dev)}ms
       Min:               #{metrics.min_latency}ms
       Max:               #{metrics.max_latency}ms
       P50 (median):      #{round_num(metrics.p50)}ms
