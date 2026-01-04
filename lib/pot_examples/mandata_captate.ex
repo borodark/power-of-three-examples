@@ -1,7 +1,5 @@
 defmodule MagnaOrder do
   use Ecto.Schema
-  use PowerOfThree
-
   schema "public.order" do
     field(:delivery_subtotal_amount, :integer)
     field(:discount_total_amount, :integer)
@@ -17,7 +15,4 @@ defmodule MagnaOrder do
     field(:customer_id, :integer)
     timestamps()
   end
-
-  # Auto-generated cube - no explicit dimensions/measures
-  cube(:mandata_captate)
 end

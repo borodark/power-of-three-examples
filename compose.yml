@@ -36,7 +36,7 @@ services:
       CUBEJS_DEV_MODE: true
       #DEBUG_LOG: true
       CUBESQL_LOG_LEVEL: trace
-      CUBEJS_LOG_LEVEL: error
+      CUBEJS_LOG_LEVEL: info
     volumes:
       - ./:/cube/conf
     depends_on:

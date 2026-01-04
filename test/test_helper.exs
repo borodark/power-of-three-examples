@@ -1,5 +1,4 @@
-# Cube tests require cubesqld to be running on port 4445
-# Run with: mix test --include cube
-# Or use: mix test test/cube_pool_test.exs --include cube
-ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(Postgres.Repo, :manual)
+# Saturation tests for HTTP and ADBC
+# Run with: mix test --include live_cube
+# Or use: mix test --include saturation
+ExUnit.start(exclude: [:saturation, :live_cube, :cube, :broken_server, :saturation_1000])

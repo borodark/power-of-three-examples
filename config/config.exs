@@ -20,6 +20,7 @@ config :pot_examples, Postgres.Repo,
   hostname: "localhost",
   database: "pot_examples_dev",
   ownership_timeout: 300_000,
+  timeout: 6_000_000,
   #  disable_composite_types: true,
   pool_size: System.schedulers_online() * 2
 
