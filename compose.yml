@@ -21,7 +21,7 @@ services:
       - 4445:4445
     environment:
       CUBEJS_DB_QUERY_TIMEOUT: 60m
-      CUBEJS_CONCURRENCY: 20
+      CUBEJS_CONCURRENCY: 8
       CUBEJS_PG_SQL_PORT: 15432
       CUBEJS_ADBC_PORT: 8120
       CUBEJS_SQL_PORT: 4445
@@ -52,7 +52,7 @@ services:
     image: octanix/cube:dev #docker.io/cubejs/cube:latest
     environment:
       CUBEJS_DB_QUERY_TIMEOUT: 60m
-      CUBEJS_REFRESH_WORKER_CONCURRENCY: 10
+      CUBEJS_REFRESH_WORKER_CONCURRENCY: 4
       CUBEJS_DB_TYPE: postgres
       CUBEJS_DB_PORT: 5432
       CUBEJS_DB_NAME: pot_examples_dev

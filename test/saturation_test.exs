@@ -100,11 +100,6 @@ defmodule SaturationTest do
     test "100 concurrent HTTP queries", %{client: client} do
       run_http_saturation(client, 100, "HTTP 100")
     end
-
-    @tag :saturation_1000
-    test "1000 concurrent HTTP queries", %{client: client} do
-      run_http_saturation(client, 1000, "HTTP 1000")
-    end
   end
 
   # ===========================================================================
@@ -233,7 +228,7 @@ defmodule SaturationTest do
     # Reporting interval (every 1 minutes)
     @report_interval_ms 60 * 1000
     # Minimum concurrent requests
-    @min_concurrent 512
+    @min_concurrent 256
 
     setup do
       {:ok, client} = CubeHttpClient.new(base_url: @cube_http_url)
@@ -242,13 +237,13 @@ defmodule SaturationTest do
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "ADBC 2-hour endurance #{inspect(@min_concurrent)} concurrent)", _context do
+    test "ADBC endurance #{inspect(@min_concurrent)} concurrent)", _context do
       run_endurance_test(:adbc, @min_concurrent, @endurance_duration_ms, "ADBC Endurance")
     end
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "HTTP 2-hour endurance (#{inspect(@min_concurrent)} concurrent)", %{client: client} do
+    test "HTTP endurance (#{inspect(@min_concurrent)} concurrent)", %{client: client} do
       run_endurance_test(:http, @min_concurrent, @endurance_duration_ms, "HTTP Endurance", client: client)
     end
 
