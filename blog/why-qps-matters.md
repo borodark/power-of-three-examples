@@ -1,6 +1,8 @@
 # Why QPS Matters: The Hidden Metric That Makes or Breaks Your Analytics Platform
 
-**TL;DR**: Switching from HTTP to ADBC increased our query throughput by **4,500x** - from 0.08 to 3,500 queries per second. This isn't just a number; it's the difference between a dashboard that frustrates users and one that delights them.
+> *"At 3,500 queries per second, analysis becomes conversational."*
+
+**TL;DR**: Switching from HTTP to ADBC increased our query throughput by **4,500x** - from 0.08 to 3,500 queries per second. This isn't just a number; it's the difference between waiting for answers and *thinking* with your data.
 
 ---
 
@@ -29,6 +31,40 @@ With traditional HTTP-based analytics APIs delivering **0.08 QPS**, those querie
 ```
 
 Your Monday morning standup just became a Tuesday afternoon catchup.
+
+## A Tale of Two "Soft Real-Times"
+
+Joe Armstrong, the creator of Erlang, defined [soft real-time](https://erlang.org/pipermail/erlang-questions/2017-October/093931.html) as systems where "some requests might miss the deadlines" - as opposed to hard real-time where every request must complete within a guaranteed time window. Erlang was designed for [soft real-time with millisecond response times](https://erlang.org/download/erlang-book-part1.pdf).
+
+We've discovered there's *another* kind of "soft real-time" in the analytics world:
+
+> **Soft Real-Time (Erlang)**: Response times in milliseconds, occasionally missing tight deadlines.
+>
+> **Soft Real-Time (HTTP Analytics)**: Your data is "real-time" in the sense that it was real at *some* point in time. The spinning wheel animation is real-time though - you can watch every frame.
+
+You know you're in "soft real-time" territory when your HTTP client needs this:
+
+```elixir
+@spinner_frames ["|", "/", "-", "\\"]
+
+defp show_spinner(idx, elapsed_ms, max_wait_ms) do
+  frame = Enum.at(@spinner_frames, idx)
+  IO.write(:stderr, "\r#{frame} Cube processing... #{elapsed_s}s/#{max_s}s ")
+end
+```
+
+☕ *With HTTP at 0.08 QPS, you have mass time to:*
+- Get coffee
+- Attend a standup
+- Question your career choices
+- Watch `| / - \` cycle 3,168 times (12.67 seconds ÷ 4ms per frame)
+- Finally see results from data that's now 12 seconds staler
+
+And here's the real kicker: **pre-aggregations add another layer of "softness."**
+
+Pre-aggs deliver blazing fast queries, but the data was aggregated minutes (or hours) ago. So you're waiting 12 seconds... for data that was already 10 minutes old. That's not soft real-time. That's *nostalgia-as-a-service*.
+
+ADBC fixes half this problem. Your queries return in milliseconds - actual Erlang-style soft real-time. The pre-aggregation staleness? Well, at least you find out about your stale data *instantly*.
 
 ## What We Discovered
 
@@ -87,10 +123,15 @@ ADBC connections are lightweight and poolable. We sustained 800 concurrent conne
 
 High QPS doesn't just make individual queries faster - it transforms what's possible:
 
-### Interactive Exploration
-At 0.08 QPS, users wait. They context-switch. They lose their train of thought.
+### Interactive Exploration: Analysis Becomes Conversational
 
-At 3,500 QPS, analysis becomes conversational. Click, see results, click again. The data responds at the speed of thought.
+At 0.08 QPS, users wait. They context-switch. They check email. They lose their train of thought. By the time results arrive, they've forgotten why they asked.
+
+At 3,500 QPS, something magical happens: **analysis becomes conversational.**
+
+Click, see results, click again. Ask a follow-up question before you forget it. Drill down, pivot, explore. The data responds at the speed of thought - and thought is fast.
+
+This isn't incremental improvement. It's a phase transition from "reporting tool" to "thinking partner."
 
 ### Real-Time Dashboards
 ```
@@ -216,12 +257,16 @@ mix test test/saturation_test.exs --include endurance
 
 QPS isn't just a performance metric - it's a user experience metric, a scalability metric, and ultimately a business metric.
 
-When your analytics platform delivers 3,500 queries per second instead of 0.08, you're not just 4,500x faster. You're enabling an entirely different class of applications:
+When your analytics platform delivers 3,500 queries per second instead of 0.08, you're not just 4,500x faster. You're enabling an entirely different relationship between humans and data:
 
 - Dashboards that feel instant
 - Exploration that flows naturally
 - Insights that arrive in real-time
 - Infrastructure costs that make sense
+
+**But most importantly: analysis becomes conversational.**
+
+Your data stops being something you query and starts being something you think with. That's not a performance optimization - that's a transformation in how decisions get made.
 
 The future of analytics is high-throughput. ADBC gets you there today.
 
