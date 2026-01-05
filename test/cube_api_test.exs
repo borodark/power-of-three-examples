@@ -65,7 +65,7 @@ defmodule ExamplesOfPoTWeb.CubeApiControllerTest do
     test "handles orders query", %{conn: conn} do
       query = %{
         "measures" => ["orders.count"],
-        "dimensions" => ["orders.financial_status"]
+        "dimensions" => ["orders.brand_code"]
       }
 
       conn = post(conn, "/cubejs-api/v1/load", %{"query" => query})
