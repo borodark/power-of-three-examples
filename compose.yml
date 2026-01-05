@@ -37,6 +37,7 @@ services:
       #DEBUG_LOG: true
       CUBESQL_LOG_LEVEL: trace
       CUBEJS_LOG_LEVEL: info
+      CUBESQL_ARROW_RESULTS_CACHE_ENABLED: true
     volumes:
       - ./:/cube/conf
     depends_on:

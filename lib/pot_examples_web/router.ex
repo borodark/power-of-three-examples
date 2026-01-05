@@ -11,7 +11,7 @@ defmodule ExamplesOfPoTWeb.Router do
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug :accepts, ["json", "ndjson"]
   end
 
   scope "/", ExamplesOfPoTWeb do
@@ -20,10 +20,17 @@ defmodule ExamplesOfPoTWeb.Router do
     get "/", PageController, :home
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", ExamplesOfPoTWeb do
-  #   pipe_through :api
-  # end
+  # Cube.js compatible API
+  scope "/cubejs-api/v1", ExamplesOfPoTWeb do
+    pipe_through :api
+
+    # Main query endpoint - supports both GET and POST
+    get "/load", CubeApiController, :load
+    post "/load", CubeApiController, :load
+
+    # Metadata endpoint
+    get "/meta", CubeApiController, :meta
+  end
 
   # Enable LiveDashboard in development
   if Application.compile_env(:pot_examples, :dev_routes) do

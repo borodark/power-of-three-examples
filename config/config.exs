@@ -10,7 +10,9 @@ import Config
 config :pot_examples,
   namespace: ExamplesOfPoT,
   ecto_repos: [Postgres.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  # Schema path for CompilerApi (Cube semantic layer)
+  schema_path: Path.expand("../model/cubes", __DIR__)
 
 config :pot_examples, Postgres.Repo,
   port: 7432,
@@ -74,6 +76,11 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
+
+# Register custom MIME types for ndjson (newline-delimited JSON)
+config :mime, :types, %{
+  "application/x-ndjson" => ["ndjson"]
+}
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
