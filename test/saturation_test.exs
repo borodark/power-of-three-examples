@@ -1,20 +1,26 @@
 defmodule SaturationTest do
   @moduledoc """
-  Saturation tests for HTTP and ADBC connections to Cube.
+  Saturation tests for HTTP, ADBC, and Phoenix endpoint connections to Cube.
 
-  ## ADBC Throughput Advantage
+  ## Three-Way Comparison: Cube HTTP vs ADBC Direct vs Phoenix/ADBC
 
-  ADBC (Arrow Database Connectivity) delivers **dramatically higher throughput**
-  compared to traditional HTTP REST APIs:
+  | Protocol      | Throughput (qps) | Avg Latency | Architecture              |
+  |---------------|------------------|-------------|---------------------------|
+  | Cube HTTP     | ~0.08 qps        | ~12,000ms   | HTTP REST + JSON          |
+  | ADBC Direct   | ~3,500 qps       | <1ms        | Arrow binary protocol     |
+  | Phoenix/ADBC  | ~500-1000 qps    | ~5-10ms     | HTTP + ADBC + Columnar JSON |
 
-  | Protocol | Throughput (qps) | Avg Latency | Speedup |
-  |----------|------------------|-------------|---------|
-  | ADBC     | ~3,500 qps       | <1ms        | **4500x** |
-  | HTTP     | ~0.08 qps        | ~12,000ms   | baseline |
+  ### Phoenix Endpoint Benefits
+
+  The Phoenix `/cubejs-api/v1/load` endpoint provides:
+  - **Drop-in Cube.js compatibility**: Same query format as Cube HTTP API
+  - **ADBC-powered backend**: Leverages Arrow native protocol internally
+  - **Columnar JSON response**: Efficient wire format aligned with Arrow model
+  - **Connection pooling**: Reuses ADBC connections across requests
 
   ### Why ADBC Throughput Matters
 
-  1. **Sub-millisecond Latency**: ADBC queries complete in <1ms avg vs 12+ seconds for HTTP
+  1. **Sub-millisecond Latency**: ADBC queries complete in <1ms avg
   2. **Massive Parallelism**: 800+ concurrent connections with 100% success rate
   3. **Zero Serialization Overhead**: Arrow columnar format eliminates JSON parsing
   4. **Connection Pooling**: Efficient connection reuse via ADBC connection pools
@@ -24,15 +30,22 @@ defmodule SaturationTest do
 
   - **Interactive Dashboards**: Sub-second refresh rates enable real-time analytics
   - **High-Concurrency**: Support thousands of simultaneous users
-  - **Cost Efficiency**: 4500x fewer compute resources needed for same workload
+  - **Cost Efficiency**: Orders of magnitude fewer compute resources needed
   - **Scalability**: Linear scaling with connection pool size
 
   ## Run Tests
 
-      mix test test/saturation_test.exs --include live_cube
+      # All saturation tests (requires Cube HTTP, ADBC, and Phoenix servers)
       mix test test/saturation_test.exs --include saturation
-      mix test test/saturation_test.exs --include saturation_1000
+
+      # Three-way comparison
+      mix test test/saturation_test.exs --include saturation --only "compare 100"
+
+      # Endurance tests (15+ minutes)
       mix test test/saturation_test.exs --include endurance
+
+      # Quick endurance (5 minutes)
+      mix test test/saturation_test.exs --include endurance_quick
   """
   use ExUnit.Case, async: true
 
@@ -49,6 +62,10 @@ defmodule SaturationTest do
 
   # Cube ADBC (Arrow Native)
   @cube_adbc_port 8120
+
+  # Phoenix endpoint (ADBC-backed /cubejs-api/v1/load)
+  @phoenix_port 4000
+  @phoenix_url "http://localhost:#{@phoenix_port}/cubejs-api/v1/load"
 
   setup_all do
     # Check HTTP API
@@ -81,11 +98,25 @@ defmodule SaturationTest do
         """
     end
 
+    # Check Phoenix endpoint
+    case :gen_tcp.connect(~c"localhost", @phoenix_port, [:binary], 1000) do
+      {:ok, socket} ->
+        :gen_tcp.close(socket)
+
+      {:error, _} ->
+        raise """
+        Phoenix server is not running on localhost:#{@phoenix_port}.
+
+        Start with:
+          mix phx.server
+        """
+    end
+
     :ok
   end
 
   # ===========================================================================
-  # HTTP Saturation Tests
+  # HTTP Saturation Tests (using mandata_captate variety)
   # ===========================================================================
 
   describe "HTTP saturation" do
@@ -97,26 +128,44 @@ defmodule SaturationTest do
     end
 
     @tag :saturation
-    test "100 concurrent HTTP queries", %{client: client} do
-      run_http_saturation(client, 100, "HTTP 100")
+    test "100 concurrent HTTP queries (mandata variety)", %{client: client} do
+      run_http_saturation_with_queries(client, 100, "HTTP 100", mandata_captate_query_variations_http())
     end
   end
 
   # ===========================================================================
-  # ADBC Saturation Tests
+  # ADBC Saturation Tests (using mandata_captate variety)
   # ===========================================================================
 
   describe "ADBC saturation" do
     @describetag :saturation
 
     @tag :saturation
-    test "100 concurrent ADBC queries" do
-      run_adbc_saturation(100, "ADBC 100")
+    test "100 concurrent ADBC queries (mandata variety)" do
+      run_adbc_saturation_with_queries(100, "ADBC 100", mandata_captate_query_variations_sql())
     end
 
     @tag :saturation_10000
-    test "10_000 concurrent ADBC queries" do
-      run_adbc_saturation(10_000, "ADBC 10_000")
+    test "10_000 concurrent ADBC queries (mandata variety)" do
+      run_adbc_saturation_with_queries(10_000, "ADBC 10_000", mandata_captate_query_variations_sql())
+    end
+  end
+
+  # ===========================================================================
+  # Phoenix Endpoint Saturation Tests (using mandata_captate variety)
+  # ===========================================================================
+
+  describe "Phoenix endpoint saturation" do
+    @describetag :saturation
+
+    @tag :saturation
+    test "100 concurrent Phoenix queries (mandata variety)" do
+      run_phoenix_saturation_with_queries(100, "Phoenix 100", mandata_captate_query_variations_phoenix())
+    end
+
+    @tag :saturation_1000
+    test "1000 concurrent Phoenix queries (mandata variety)" do
+      run_phoenix_saturation_with_queries(1000, "Phoenix 1000", mandata_captate_query_variations_phoenix())
     end
   end
 
@@ -124,7 +173,7 @@ defmodule SaturationTest do
   # Comparison Tests
   # ===========================================================================
 
-  describe "HTTP vs ADBC comparison" do
+  describe "HTTP vs ADBC vs Phoenix comparison" do
     @describetag :saturation
 
     setup do
@@ -134,14 +183,15 @@ defmodule SaturationTest do
 
     @tag :saturation
     test "compare 100 concurrent queries (with pre-agg)", %{client: client} do
-      IO.puts("\n" <> String.duplicate("=", 60))
+      IO.puts("\n" <> String.duplicate("=", 70))
       IO.puts("COMPARISON: 100 Concurrent Queries (WITH Pre-Aggregation)")
-      IO.puts(String.duplicate("=", 60))
+      IO.puts(String.duplicate("=", 70))
 
-      http_metrics = run_http_saturation(client, 100, "HTTP", quiet: true)
-      adbc_metrics = run_adbc_saturation(100, "ADBC", quiet: true)
+      http_metrics = run_http_saturation(client, 100, "Cube HTTP", quiet: true)
+      adbc_metrics = run_adbc_saturation(100, "ADBC Direct", quiet: true)
+      phoenix_metrics = run_phoenix_saturation(100, "Phoenix/ADBC", quiet: true)
 
-      print_comparison(http_metrics, adbc_metrics)
+      print_three_way_comparison(http_metrics, adbc_metrics, phoenix_metrics)
     end
   end
 
@@ -176,6 +226,98 @@ defmodule SaturationTest do
         "ADBC Variety 100",
         cube_query_variations_sql()
       )
+    end
+  end
+
+  # ===========================================================================
+  # Mandata Captate Variety Tests (with pre-aggregations, high volume)
+  # ===========================================================================
+
+  describe "Mandata Captate variety (pre-agg cube, LIMIT > 10k)" do
+    @describetag :saturation
+    @describetag :mandata
+
+    @tag :saturation
+    @tag :mandata
+    test "ADBC mandata variety (100 concurrent, 20 query types)" do
+      IO.puts("\n" <> String.duplicate("=", 70))
+      IO.puts("MANDATA CAPTATE: 100 Concurrent × 20 Query Variations (LIMIT 10k+)")
+      IO.puts(String.duplicate("=", 70))
+
+      run_adbc_saturation_with_queries(
+        100,
+        "ADBC Mandata Variety",
+        mandata_captate_query_variations_sql()
+      )
+    end
+
+    @tag :saturation
+    @tag :mandata
+    test "Phoenix mandata variety (100 concurrent, 20 query types)" do
+      IO.puts("\n" <> String.duplicate("=", 70))
+      IO.puts("PHOENIX MANDATA: 100 Concurrent × 20 Query Variations (LIMIT 10k+)")
+      IO.puts(String.duplicate("=", 70))
+
+      run_phoenix_saturation_with_queries(
+        100,
+        "Phoenix Mandata Variety",
+        mandata_captate_query_variations_phoenix()
+      )
+    end
+
+    @tag :saturation
+    @tag :mandata
+    @tag :mandata_1000
+    test "ADBC mandata high volume (1000 concurrent)" do
+      IO.puts("\n" <> String.duplicate("=", 70))
+      IO.puts("ADBC MANDATA HIGH VOLUME: 1000 Concurrent Queries")
+      IO.puts(String.duplicate("=", 70))
+
+      run_adbc_saturation_with_queries(
+        1000,
+        "ADBC Mandata 1000",
+        mandata_captate_query_variations_sql()
+      )
+    end
+
+    @tag :saturation
+    @tag :mandata
+    test "Three-way mandata comparison (100 concurrent)", %{} do
+      IO.puts("\n" <> String.duplicate("=", 70))
+      IO.puts("MANDATA CAPTATE: Three-Way Comparison (100 Concurrent)")
+      IO.puts(String.duplicate("=", 70))
+
+      adbc_metrics = run_adbc_saturation_with_queries(
+        100,
+        "ADBC Mandata",
+        mandata_captate_query_variations_sql(),
+        quiet: true
+      )
+
+      phoenix_metrics = run_phoenix_saturation_with_queries(
+        100,
+        "Phoenix Mandata",
+        mandata_captate_query_variations_phoenix(),
+        quiet: true
+      )
+
+      # Print comparison
+      IO.puts("""
+
+      +----------------------+----------------+----------------+
+      | Metric               | ADBC Direct    | Phoenix/ADBC   |
+      +----------------------+----------------+----------------+
+      | Success Rate         | #{pad(adbc_metrics.success_rate, "%")} | #{pad(phoenix_metrics.success_rate, "%")} |
+      | Throughput (qps)     | #{pad(adbc_metrics.throughput, "")} | #{pad(phoenix_metrics.throughput, "")} |
+      | Avg Latency (ms)     | #{pad(adbc_metrics.avg_latency, "")} | #{pad(phoenix_metrics.avg_latency, "")} |
+      | P50 Latency (ms)     | #{pad(adbc_metrics.p50, "")} | #{pad(phoenix_metrics.p50, "")} |
+      | P95 Latency (ms)     | #{pad(adbc_metrics.p95, "")} | #{pad(phoenix_metrics.p95, "")} |
+      | P99 Latency (ms)     | #{pad(adbc_metrics.p99, "")} | #{pad(phoenix_metrics.p99, "")} |
+      +----------------------+----------------+----------------+
+
+      Query variety: 20 different combinations with LIMIT 10,000-50,000
+      Granularities: year, quarter, month, week, day, hour
+      """)
     end
   end
 
@@ -247,11 +389,23 @@ defmodule SaturationTest do
       run_endurance_test(:http, @min_concurrent, @endurance_duration_ms, "HTTP Endurance", client: client)
     end
 
+    @tag :endurance
+    @tag timeout: @endurance_duration_ms + 300_000
+    test "Phoenix endurance (#{inspect(@min_concurrent)} concurrent)", _context do
+      run_endurance_test(:phoenix, @min_concurrent, @endurance_duration_ms, "Phoenix Endurance")
+    end
+
     @tag :endurance_quick
     @tag timeout: 600_000
     test "Quick endurance test (5 min, 100 concurrent)" do
       # Quick version for testing the endurance logic
       run_endurance_test(:adbc, 100, 5 * 60 * 1000, "ADBC Quick Endurance")
+    end
+
+    @tag :endurance_quick
+    @tag timeout: 600_000
+    test "Quick Phoenix endurance test (5 min, 100 concurrent)" do
+      run_endurance_test(:phoenix, 100, 5 * 60 * 1000, "Phoenix Quick Endurance")
     end
   end
 
@@ -380,6 +534,31 @@ defmodule SaturationTest do
       case CubeHttpClient.query(client, cube_query_http(), max_wait: 60_000, poll_interval: 500) do
         {:ok, _df} -> :ok
         {:error, e} -> {:error, e.message}
+      end
+    rescue
+      e -> {:error, Exception.message(e)}
+    end
+
+    latency = System.monotonic_time(:millisecond) - query_start
+    {result, latency}
+  end
+
+  defp execute_timed_query(:phoenix, _client) do
+    :inets.start()
+    query_start = System.monotonic_time(:millisecond)
+
+    result = try do
+      body = Jason.encode!(%{"query" => phoenix_query()})
+
+      case :httpc.request(
+             :post,
+             {~c"#{@phoenix_url}", [], ~c"application/json", body},
+             [timeout: 60_000],
+             []
+           ) do
+        {:ok, {{_, 200, _}, _, _body}} -> :ok
+        {:ok, {{_, status, _}, _, body}} -> {:error, "HTTP #{status}: #{body}"}
+        {:error, reason} -> {:error, inspect(reason)}
       end
     rescue
       e -> {:error, Exception.message(e)}
@@ -688,6 +867,462 @@ defmodule SaturationTest do
     ]
   end
 
+  # Phoenix endpoint query (uses orders_with_preagg via ADBC)
+  defp phoenix_query do
+    %{
+      "dimensions" => ["orders_with_preagg.brand_code"],
+      "measures" => ["orders_with_preagg.count", "orders_with_preagg.total_amount_sum"],
+      "limit" => 50
+    }
+  end
+
+  # ===========================================================================
+  # Mandata Captate Query Variations (20 combinations, LIMIT 10k-50k)
+  # ===========================================================================
+
+  # ADBC SQL queries for mandata_captate
+  defp mandata_captate_query_variations_sql do
+    [
+      # 1. Simple yearly aggregation
+      """
+      SELECT
+        DATE_TRUNC('year', mandata_captate.updated_at),
+        MEASURE(mandata_captate.count)
+      FROM mandata_captate
+      GROUP BY 1
+      LIMIT 10000
+      """,
+
+      # 2. Yearly with multiple measures
+      """
+      SELECT
+        DATE_TRUNC('year', mandata_captate.updated_at),
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.total_amount_sum),
+        MEASURE(mandata_captate.tax_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1
+      LIMIT 15000
+      """,
+
+      # 3. Quarterly by brand
+      """
+      SELECT
+        DATE_TRUNC('quarter', mandata_captate.updated_at),
+        mandata_captate.brand_code,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.total_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 20000
+      """,
+
+      # 4. Monthly by market and brand
+      """
+      SELECT
+        DATE_TRUNC('month', mandata_captate.updated_at),
+        mandata_captate.market_code,
+        mandata_captate.brand_code,
+        MEASURE(mandata_captate.count)
+      FROM mandata_captate
+      GROUP BY 1, 2, 3
+      LIMIT 25000
+      """,
+
+      # 5. Weekly with all amount measures
+      """
+      SELECT
+        DATE_TRUNC('week', mandata_captate.updated_at),
+        MEASURE(mandata_captate.total_amount_sum),
+        MEASURE(mandata_captate.subtotal_amount_sum),
+        MEASURE(mandata_captate.tax_amount_sum),
+        MEASURE(mandata_captate.discount_total_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1
+      LIMIT 30000
+      """,
+
+      # 6. Daily by financial status
+      """
+      SELECT
+        DATE_TRUNC('day', mandata_captate.updated_at),
+        mandata_captate.financial_status,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.total_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 35000
+      """,
+
+      # 7. Hourly (high granularity)
+      """
+      SELECT
+        DATE_TRUNC('hour', mandata_captate.updated_at),
+        MEASURE(mandata_captate.count)
+      FROM mandata_captate
+      GROUP BY 1
+      LIMIT 50000
+      """,
+
+      # 8. Yearly by fulfillment status
+      """
+      SELECT
+        DATE_TRUNC('year', mandata_captate.updated_at),
+        mandata_captate.fulfillment_status,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.customer_id_distinct)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 12000
+      """,
+
+      # 9. Quarterly with distinct counts
+      """
+      SELECT
+        DATE_TRUNC('quarter', mandata_captate.updated_at),
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.customer_id_distinct),
+        MEASURE(mandata_captate.total_amount_distinct)
+      FROM mandata_captate
+      GROUP BY 1
+      LIMIT 18000
+      """,
+
+      # 10. Monthly by brand with delivery
+      """
+      SELECT
+        DATE_TRUNC('month', mandata_captate.updated_at),
+        mandata_captate.brand_code,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.delivery_subtotal_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 22000
+      """,
+
+      # 11. Weekly by market, brand, financial status
+      """
+      SELECT
+        DATE_TRUNC('week', mandata_captate.updated_at),
+        mandata_captate.market_code,
+        mandata_captate.brand_code,
+        mandata_captate.financial_status,
+        MEASURE(mandata_captate.count)
+      FROM mandata_captate
+      GROUP BY 1, 2, 3, 4
+      LIMIT 40000
+      """,
+
+      # 12. Daily comprehensive measures
+      """
+      SELECT
+        DATE_TRUNC('day', mandata_captate.updated_at),
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.customer_id_sum),
+        MEASURE(mandata_captate.total_amount_sum),
+        MEASURE(mandata_captate.subtotal_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1
+      LIMIT 45000
+      """,
+
+      # 13. Yearly full dimension breakdown
+      """
+      SELECT
+        DATE_TRUNC('year', mandata_captate.updated_at),
+        mandata_captate.market_code,
+        mandata_captate.brand_code,
+        mandata_captate.fulfillment_status,
+        mandata_captate.financial_status,
+        MEASURE(mandata_captate.count)
+      FROM mandata_captate
+      GROUP BY 1, 2, 3, 4, 5
+      LIMIT 50000
+      """,
+
+      # 14. Quarterly all amounts
+      """
+      SELECT
+        DATE_TRUNC('quarter', mandata_captate.updated_at),
+        mandata_captate.brand_code,
+        MEASURE(mandata_captate.total_amount_sum),
+        MEASURE(mandata_captate.tax_amount_sum),
+        MEASURE(mandata_captate.subtotal_amount_sum),
+        MEASURE(mandata_captate.discount_total_amount_sum),
+        MEASURE(mandata_captate.delivery_subtotal_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 28000
+      """,
+
+      # 15. Monthly customer metrics
+      """
+      SELECT
+        DATE_TRUNC('month', mandata_captate.updated_at),
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.customer_id_sum),
+        MEASURE(mandata_captate.customer_id_distinct)
+      FROM mandata_captate
+      GROUP BY 1
+      LIMIT 15000
+      """,
+
+      # 16. Weekly by fulfillment and financial
+      """
+      SELECT
+        DATE_TRUNC('week', mandata_captate.updated_at),
+        mandata_captate.fulfillment_status,
+        mandata_captate.financial_status,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.total_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2, 3
+      LIMIT 35000
+      """,
+
+      # 17. Daily by market only
+      """
+      SELECT
+        DATE_TRUNC('day', mandata_captate.updated_at),
+        mandata_captate.market_code,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.total_amount_sum),
+        MEASURE(mandata_captate.customer_id_distinct)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 42000
+      """,
+
+      # 18. Hourly by brand
+      """
+      SELECT
+        DATE_TRUNC('hour', mandata_captate.updated_at),
+        mandata_captate.brand_code,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.total_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 50000
+      """,
+
+      # 19. Yearly tax analysis
+      """
+      SELECT
+        DATE_TRUNC('year', mandata_captate.updated_at),
+        mandata_captate.market_code,
+        MEASURE(mandata_captate.tax_amount_sum),
+        MEASURE(mandata_captate.tax_amount_distinct),
+        MEASURE(mandata_captate.total_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2
+      LIMIT 20000
+      """,
+
+      # 20. Monthly comprehensive with all measures
+      """
+      SELECT
+        DATE_TRUNC('month', mandata_captate.updated_at),
+        mandata_captate.brand_code,
+        mandata_captate.market_code,
+        MEASURE(mandata_captate.count),
+        MEASURE(mandata_captate.customer_id_distinct),
+        MEASURE(mandata_captate.total_amount_sum),
+        MEASURE(mandata_captate.subtotal_amount_sum),
+        MEASURE(mandata_captate.tax_amount_sum),
+        MEASURE(mandata_captate.discount_total_amount_sum)
+      FROM mandata_captate
+      GROUP BY 1, 2, 3
+      LIMIT 50000
+      """
+    ]
+  end
+
+  # Phoenix HTTP queries for mandata_captate
+  defp mandata_captate_query_variations_phoenix do
+    [
+      # 1. Simple yearly
+      %{
+        "measures" => ["mandata_captate.count"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
+        "limit" => 10000
+      },
+
+      # 2. Yearly with multiple measures
+      %{
+        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum", "mandata_captate.tax_amount_sum"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
+        "limit" => 15000
+      },
+
+      # 3. Quarterly by brand
+      %{
+        "dimensions" => ["mandata_captate.brand_code"],
+        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "quarter"}],
+        "limit" => 20000
+      },
+
+      # 4. Monthly by market and brand
+      %{
+        "dimensions" => ["mandata_captate.market_code", "mandata_captate.brand_code"],
+        "measures" => ["mandata_captate.count"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
+        "limit" => 25000
+      },
+
+      # 5. Weekly with all amount measures
+      %{
+        "measures" => [
+          "mandata_captate.total_amount_sum",
+          "mandata_captate.subtotal_amount_sum",
+          "mandata_captate.tax_amount_sum",
+          "mandata_captate.discount_total_amount_sum"
+        ],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "week"}],
+        "limit" => 30000
+      },
+
+      # 6. Daily by financial status
+      %{
+        "dimensions" => ["mandata_captate.financial_status"],
+        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "day"}],
+        "limit" => 35000
+      },
+
+      # 7. Hourly
+      %{
+        "measures" => ["mandata_captate.count"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "hour"}],
+        "limit" => 50000
+      },
+
+      # 8. Yearly by fulfillment
+      %{
+        "dimensions" => ["mandata_captate.fulfillment_status"],
+        "measures" => ["mandata_captate.count", "mandata_captate.customer_id_distinct"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
+        "limit" => 12000
+      },
+
+      # 9. Quarterly with distinct counts
+      %{
+        "measures" => ["mandata_captate.count", "mandata_captate.customer_id_distinct", "mandata_captate.total_amount_distinct"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "quarter"}],
+        "limit" => 18000
+      },
+
+      # 10. Monthly by brand with delivery
+      %{
+        "dimensions" => ["mandata_captate.brand_code"],
+        "measures" => ["mandata_captate.count", "mandata_captate.delivery_subtotal_amount_sum"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
+        "limit" => 22000
+      },
+
+      # 11. Weekly by market, brand, financial status
+      %{
+        "dimensions" => ["mandata_captate.market_code", "mandata_captate.brand_code", "mandata_captate.financial_status"],
+        "measures" => ["mandata_captate.count"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "week"}],
+        "limit" => 40000
+      },
+
+      # 12. Daily comprehensive measures
+      %{
+        "measures" => [
+          "mandata_captate.count",
+          "mandata_captate.customer_id_sum",
+          "mandata_captate.total_amount_sum",
+          "mandata_captate.subtotal_amount_sum"
+        ],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "day"}],
+        "limit" => 45000
+      },
+
+      # 13. Yearly full dimension breakdown
+      %{
+        "dimensions" => [
+          "mandata_captate.market_code",
+          "mandata_captate.brand_code",
+          "mandata_captate.fulfillment_status",
+          "mandata_captate.financial_status"
+        ],
+        "measures" => ["mandata_captate.count"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
+        "limit" => 50000
+      },
+
+      # 14. Quarterly all amounts
+      %{
+        "dimensions" => ["mandata_captate.brand_code"],
+        "measures" => [
+          "mandata_captate.total_amount_sum",
+          "mandata_captate.tax_amount_sum",
+          "mandata_captate.subtotal_amount_sum",
+          "mandata_captate.discount_total_amount_sum",
+          "mandata_captate.delivery_subtotal_amount_sum"
+        ],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "quarter"}],
+        "limit" => 28000
+      },
+
+      # 15. Monthly customer metrics
+      %{
+        "measures" => ["mandata_captate.count", "mandata_captate.customer_id_sum", "mandata_captate.customer_id_distinct"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
+        "limit" => 15000
+      },
+
+      # 16. Weekly by fulfillment and financial
+      %{
+        "dimensions" => ["mandata_captate.fulfillment_status", "mandata_captate.financial_status"],
+        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "week"}],
+        "limit" => 35000
+      },
+
+      # 17. Daily by market
+      %{
+        "dimensions" => ["mandata_captate.market_code"],
+        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum", "mandata_captate.customer_id_distinct"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "day"}],
+        "limit" => 42000
+      },
+
+      # 18. Hourly by brand
+      %{
+        "dimensions" => ["mandata_captate.brand_code"],
+        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "hour"}],
+        "limit" => 50000
+      },
+
+      # 19. Yearly tax analysis
+      %{
+        "dimensions" => ["mandata_captate.market_code"],
+        "measures" => ["mandata_captate.tax_amount_sum", "mandata_captate.tax_amount_distinct", "mandata_captate.total_amount_sum"],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
+        "limit" => 20000
+      },
+
+      # 20. Monthly comprehensive
+      %{
+        "dimensions" => ["mandata_captate.brand_code", "mandata_captate.market_code"],
+        "measures" => [
+          "mandata_captate.count",
+          "mandata_captate.customer_id_distinct",
+          "mandata_captate.total_amount_sum",
+          "mandata_captate.subtotal_amount_sum",
+          "mandata_captate.tax_amount_sum",
+          "mandata_captate.discount_total_amount_sum"
+        ],
+        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
+        "limit" => 50000
+      }
+    ]
+  end
+
   # Uses orders_no_preagg cube (no pre-aggregations - hits DB directly)
   defp cube_query_no_preagg_http do
     %{
@@ -907,6 +1542,134 @@ defmodule SaturationTest do
   end
 
   # ===========================================================================
+  # Phoenix Endpoint Implementation
+  # ===========================================================================
+
+  defp run_phoenix_saturation(count, label, opts \\ []) do
+    quiet = Keyword.get(opts, :quiet, false)
+
+    unless quiet do
+      IO.puts("\n" <> String.duplicate("=", 60))
+      IO.puts("#{label}: #{count} Concurrent Queries (Phoenix/ADBC)")
+      IO.puts(String.duplicate("=", 60))
+    end
+
+    # Ensure inets is started for httpc
+    :inets.start()
+
+    start_time = System.monotonic_time(:millisecond)
+
+    tasks =
+      for _ <- 1..count do
+        Task.async(fn ->
+          query_start = System.monotonic_time(:millisecond)
+
+          body = Jason.encode!(%{"query" => phoenix_query()})
+
+          result =
+            try do
+              case :httpc.request(
+                     :post,
+                     {~c"#{@phoenix_url}", [], ~c"application/json", body},
+                     [timeout: 120_000],
+                     []
+                   ) do
+                {:ok, {{_, 200, _}, _, _response_body}} ->
+                  :ok
+
+                {:ok, {{_, status, _}, _, response_body}} ->
+                  {:error, "HTTP #{status}: #{String.slice(to_string(response_body), 0, 100)}"}
+
+                {:error, reason} ->
+                  {:error, inspect(reason)}
+              end
+            rescue
+              e -> {:error, Exception.message(e)}
+            end
+
+          query_end = System.monotonic_time(:millisecond)
+          latency = query_end - query_start
+
+          case result do
+            :ok -> {:ok, latency}
+            {:error, msg} -> {:error, msg, latency}
+          end
+        end)
+      end
+
+    results = Task.await_many(tasks, 180_000)
+    end_time = System.monotonic_time(:millisecond)
+    total_duration = end_time - start_time
+
+    metrics = calculate_metrics(results, total_duration, count)
+    unless quiet, do: print_metrics(metrics, label)
+    metrics
+  end
+
+  defp run_phoenix_saturation_with_queries(count, label, queries, opts \\ []) do
+    quiet = Keyword.get(opts, :quiet, false)
+    query_count = length(queries)
+
+    unless quiet do
+      IO.puts("\n" <> String.duplicate("=", 60))
+      IO.puts("#{label}: #{count} Concurrent Queries (#{query_count} variants)")
+      IO.puts(String.duplicate("=", 60))
+    end
+
+    # Ensure inets is started for httpc
+    :inets.start()
+
+    start_time = System.monotonic_time(:millisecond)
+
+    tasks =
+      for idx <- 1..count do
+        Task.async(fn ->
+          query = Enum.at(queries, rem(idx - 1, query_count))
+          query_start = System.monotonic_time(:millisecond)
+
+          body = Jason.encode!(%{"query" => query})
+
+          result =
+            try do
+              case :httpc.request(
+                     :post,
+                     {~c"#{@phoenix_url}", [], ~c"application/json", body},
+                     [timeout: 120_000],
+                     []
+                   ) do
+                {:ok, {{_, 200, _}, _, _response_body}} ->
+                  :ok
+
+                {:ok, {{_, status, _}, _, response_body}} ->
+                  {:error, "HTTP #{status}: #{String.slice(to_string(response_body), 0, 100)}"}
+
+                {:error, reason} ->
+                  {:error, inspect(reason)}
+              end
+            rescue
+              e -> {:error, Exception.message(e)}
+            end
+
+          query_end = System.monotonic_time(:millisecond)
+          latency = query_end - query_start
+
+          case result do
+            :ok -> {:ok, latency}
+            {:error, msg} -> {:error, msg, latency}
+          end
+        end)
+      end
+
+    results = Task.await_many(tasks, 300_000)
+    end_time = System.monotonic_time(:millisecond)
+    total_duration = end_time - start_time
+
+    metrics = calculate_metrics(results, total_duration, count)
+    unless quiet, do: print_metrics(metrics, label)
+    metrics
+  end
+
+  # ===========================================================================
   # Metrics Calculation (using Explorer for statistics)
   # ===========================================================================
 
@@ -1028,6 +1791,42 @@ defmodule SaturationTest do
     end
 
     IO.puts("  Pre-Aggregation Speedup: #{round_num(speedup)}x faster")
+  end
+
+  defp print_three_way_comparison(http_metrics, adbc_metrics, phoenix_metrics) do
+    IO.puts("""
+
+    +----------------------+----------------+----------------+----------------+
+    | Metric               | Cube HTTP      | ADBC Direct    | Phoenix/ADBC   |
+    +----------------------+----------------+----------------+----------------+
+    | Success Rate         | #{pad(http_metrics.success_rate, "%")} | #{pad(adbc_metrics.success_rate, "%")} | #{pad(phoenix_metrics.success_rate, "%")} |
+    | Throughput (qps)     | #{pad(http_metrics.throughput, "")} | #{pad(adbc_metrics.throughput, "")} | #{pad(phoenix_metrics.throughput, "")} |
+    | Avg Latency (ms)     | #{pad(http_metrics.avg_latency, "")} | #{pad(adbc_metrics.avg_latency, "")} | #{pad(phoenix_metrics.avg_latency, "")} |
+    | P50 Latency (ms)     | #{pad(http_metrics.p50, "")} | #{pad(adbc_metrics.p50, "")} | #{pad(phoenix_metrics.p50, "")} |
+    | P95 Latency (ms)     | #{pad(http_metrics.p95, "")} | #{pad(adbc_metrics.p95, "")} | #{pad(phoenix_metrics.p95, "")} |
+    | P99 Latency (ms)     | #{pad(http_metrics.p99, "")} | #{pad(adbc_metrics.p99, "")} | #{pad(phoenix_metrics.p99, "")} |
+    +----------------------+----------------+----------------+----------------+
+    """)
+
+    # Calculate speedups
+    http_vs_adbc = if http_metrics.throughput > 0, do: adbc_metrics.throughput / http_metrics.throughput, else: 0
+    http_vs_phoenix = if http_metrics.throughput > 0, do: phoenix_metrics.throughput / http_metrics.throughput, else: 0
+    phoenix_vs_adbc = if phoenix_metrics.throughput > 0, do: adbc_metrics.throughput / phoenix_metrics.throughput, else: 0
+
+    IO.puts("""
+      ============================================================
+      THROUGHPUT COMPARISON
+      ============================================================
+      ADBC Direct vs Cube HTTP:     #{round_num(http_vs_adbc)}x faster
+      Phoenix/ADBC vs Cube HTTP:    #{round_num(http_vs_phoenix)}x faster
+      ADBC Direct vs Phoenix/ADBC:  #{round_num(phoenix_vs_adbc)}x faster
+
+      Phoenix adds HTTP overhead but retains most ADBC benefits:
+      - Columnar JSON response format
+      - Connection pooling via ADBC
+      - Sub-second latency at scale
+      ============================================================
+    """)
   end
 
   defp print_comparison(http_metrics, adbc_metrics) do

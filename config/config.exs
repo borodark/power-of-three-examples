@@ -29,7 +29,7 @@ config :pot_examples, Postgres.Repo,
 
 # Cube ADBC connection pool configuration
 config :pot_examples, Adbc.CubePool,
-  pool_size: 44,
+  pool_size: 176,
   host: "localhost",
   port: 8120,
   token: "test",
