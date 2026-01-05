@@ -74,6 +74,35 @@ defmodule ExamplesOfPoTWeb.CubeApiControllerTest do
       assert response["queryType"] == "regularQuery"
     end
 
+    test "returns columnar JSON format", %{conn: conn} do
+      query = %{
+        "measures" => ["of_customers.count"],
+        "dimensions" => ["of_customers.brand"]
+      }
+
+      conn = post(conn, "/cubejs-api/v1/load", %{"query" => query})
+      response = json_response(conn, 200)
+
+      [result | _] = response["results"]
+      data = result["data"]
+
+      # Columnar format: data is a map where each key is a column name
+      # and values are arrays of all values for that column
+      assert is_map(data)
+
+      # Each column should be a list (not individual row values)
+      Enum.each(data, fn {_col_name, values} ->
+        assert is_list(values), "Expected columnar format with list values"
+      end)
+
+      # Verify we have both measure and dimension columns
+      keys = Map.keys(data)
+      assert length(keys) == 2, "Expected 2 columns (measure + dimension), got: #{inspect(keys)}"
+
+      # Measure should be mapped to full cube member name
+      assert "of_customers.count" in keys
+    end
+
     test "handles filters", %{conn: conn} do
       query = %{
         "measures" => ["of_customers.count"],

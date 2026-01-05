@@ -6,11 +6,28 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
   - CompilerApi for semantic query compilation to SQL
   - Explorer/ADBC for high-performance query execution
   - PostgreSQL as the underlying data store
+
+  ## Columnar JSON Response
+
+  Results are returned in columnar format for efficiency:
+
+      %{
+        "data" => %{
+          "Orders.count" => [42, 38, 25],
+          "Orders.status" => ["completed", "pending", "cancelled"]
+        }
+      }
+
+  This format aligns with Arrow's columnar model, reducing serialization overhead
+  and enabling efficient client-side processing.
   """
 
   use ExamplesOfPoTWeb, :controller
 
   require Logger
+
+  alias Explorer.DataFrame
+  alias Explorer.Series
 
   @doc """
   Handles POST requests to /cubejs-api/v1/load
@@ -172,7 +189,9 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
     # Execute via Postgres.Repo with Postgrex
     case Postgres.Repo.query(sql, params) do
       {:ok, %Postgrex.Result{columns: columns, rows: rows}} ->
-        {:ok, %{columns: columns, rows: rows}}
+        # Convert to Explorer DataFrame for native columnar format
+        df = rows_to_dataframe(columns, rows)
+        {:ok, %{columns: columns, dataframe: df}}
 
       {:error, %Postgrex.Error{} = error} ->
         Logger.error("Query execution failed: #{inspect(error)}")
@@ -184,26 +203,51 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
     end
   end
 
+  # Convert Postgrex rows to Explorer DataFrame (columnar format)
+  defp rows_to_dataframe(columns, rows) when rows == [] do
+    # Empty result - create empty DataFrame with column names
+    columns
+    |> Enum.map(fn col -> {col, []} end)
+    |> DataFrame.new()
+  end
+
+  defp rows_to_dataframe(columns, rows) do
+    # Transpose rows to columns and create DataFrame
+    columns
+    |> Enum.with_index()
+    |> Enum.map(fn {col_name, idx} ->
+      values = Enum.map(rows, fn row -> Enum.at(row, idx) end)
+      {col_name, values}
+    end)
+    |> DataFrame.new()
+  end
+
   defp format_db_error(%Postgrex.Error{postgres: %{message: message}}) do
     "Database error: #{message}"
   end
 
   defp format_db_error(_), do: "Database query failed"
 
-  defp build_cube_response(query, %{columns: columns, rows: rows}, request_id) do
+  defp build_cube_response(query, %{columns: columns, dataframe: df}, request_id) do
     measures = query["measures"] || query[:measures] || []
     dimensions = query["dimensions"] || query[:dimensions] || []
     time_dimensions = query["timeDimensions"] || query[:timeDimensions] || []
 
-    # Build data array (each row as a map)
+    # Convert DataFrame to columnar map with formatted column names
+    # This leverages Explorer's native Arrow-backed columnar storage
     data =
-      rows
-      |> Enum.map(fn row ->
-        columns
-        |> Enum.zip(row)
-        |> Enum.into(%{}, fn {col, val} ->
-          {format_column_name(col, dimensions, measures, time_dimensions), format_value(val)}
-        end)
+      columns
+      |> Enum.reduce(%{}, fn col, acc ->
+        formatted_name = format_column_name(col, dimensions, measures, time_dimensions)
+        series = df[col]
+
+        # Convert Series to list with proper value formatting
+        values =
+          series
+          |> Series.to_list()
+          |> Enum.map(&format_value/1)
+
+        Map.put(acc, formatted_name, values)
       end)
 
     # Build annotation metadata
