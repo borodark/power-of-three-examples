@@ -184,8 +184,8 @@ defmodule SaturationTest do
     @tag :saturation
     test "compare 100 concurrent queries (mandata variety)", %{client: client} do
       IO.puts("\n" <> String.duplicate("=", 70))
-      IO.puts("COMPARISON: 100 Concurrent × 20 Query Variations (mandata_captate)")
-      IO.puts("Granularities: year, quarter, month, week, day, hour | LIMIT 10k-50k")
+      IO.puts("COMPARISON: 100 Concurrent × 512 Query Variations (mandata_captate)")
+      IO.puts("10 years (2016-2025) × 6 granularities × 8 templates | LIMIT 1k-50k")
       IO.puts(String.duplicate("=", 70))
 
       http_metrics = run_http_saturation_with_queries(client, 100, "Cube HTTP", mandata_captate_query_variations_http(), quiet: true)
@@ -240,9 +240,9 @@ defmodule SaturationTest do
 
     @tag :saturation
     @tag :mandata
-    test "ADBC mandata variety (100 concurrent, 20 query types)" do
+    test "ADBC mandata variety (100 concurrent, 512 query types)" do
       IO.puts("\n" <> String.duplicate("=", 70))
-      IO.puts("MANDATA CAPTATE: 100 Concurrent × 20 Query Variations (LIMIT 10k+)")
+      IO.puts("MANDATA CAPTATE: 100 Concurrent × 512 Query Variations (2016-2025)")
       IO.puts(String.duplicate("=", 70))
 
       run_adbc_saturation_with_queries(
@@ -254,9 +254,9 @@ defmodule SaturationTest do
 
     @tag :saturation
     @tag :mandata
-    test "Phoenix mandata variety (100 concurrent, 20 query types)" do
+    test "Phoenix mandata variety (100 concurrent, 512 query types)" do
       IO.puts("\n" <> String.duplicate("=", 70))
-      IO.puts("PHOENIX MANDATA: 100 Concurrent × 20 Query Variations (LIMIT 10k+)")
+      IO.puts("PHOENIX MANDATA: 100 Concurrent × 512 Query Variations (2016-2025)")
       IO.puts(String.duplicate("=", 70))
 
       run_phoenix_saturation_with_queries(
@@ -316,8 +316,10 @@ defmodule SaturationTest do
       | P99 Latency (ms)     | #{pad(adbc_metrics.p99, "")} | #{pad(phoenix_metrics.p99, "")} |
       +----------------------+----------------+----------------+
 
-      Query variety: 20 different combinations with LIMIT 10,000-50,000
+      Query variety: 512 combinations (75 date ranges × 6 granularities × 8 templates)
+      Date ranges: 2016-2025 (full years, halves, quarters, rolling periods)
       Granularities: year, quarter, month, week, day, hour
+      LIMIT: varies 1,000 to 50,000 (50 different values)
       """)
     end
   end
@@ -364,7 +366,7 @@ defmodule SaturationTest do
   # ===========================================================================
 
   # ===========================================================================
-  # Endurance Tests (using mandata_captate variety, 20 query types)
+  # Endurance Tests (using mandata_captate variety, 512 query types)
   # ===========================================================================
 
   describe "Endurance tests (mandata_captate variety)" do
@@ -384,43 +386,43 @@ defmodule SaturationTest do
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "ADBC endurance (#{inspect(@min_concurrent)} concurrent, 20 query types)", _context do
-      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
+    test "ADBC endurance (#{inspect(@min_concurrent)} concurrent, 512 query types)", _context do
+      IO.puts("Query variety: 512 mandata_captate combinations (2016-2025), LIMIT 1k-50k")
       run_endurance_test(:adbc, @min_concurrent, @endurance_duration_ms, "ADBC Endurance")
     end
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "HTTP endurance (#{inspect(@min_concurrent)} concurrent, 20 query types)", %{client: client} do
-      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
+    test "HTTP endurance (#{inspect(@min_concurrent)} concurrent, 512 query types)", %{client: client} do
+      IO.puts("Query variety: 512 mandata_captate combinations (2016-2025), LIMIT 1k-50k")
       run_endurance_test(:http, @min_concurrent, @endurance_duration_ms, "HTTP Endurance", client: client)
     end
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "Phoenix endurance (#{inspect(@min_concurrent)} concurrent, 20 query types)", _context do
-      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
+    test "Phoenix endurance (#{inspect(@min_concurrent)} concurrent, 512 query types)", _context do
+      IO.puts("Query variety: 512 mandata_captate combinations (2016-2025), LIMIT 1k-50k")
       run_endurance_test(:phoenix, @min_concurrent, @endurance_duration_ms, "Phoenix Endurance")
     end
 
     @tag :endurance_quick
     @tag timeout: 600_000
-    test "Quick ADBC endurance (5 min, 100 concurrent, 20 query types)" do
-      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
+    test "Quick ADBC endurance (5 min, 100 concurrent, 512 query types)" do
+      IO.puts("Query variety: 512 mandata_captate combinations (2016-2025), LIMIT 1k-50k")
       run_endurance_test(:adbc, 100, 5 * 60 * 1000, "ADBC Quick Endurance")
     end
 
     @tag :endurance_quick
     @tag timeout: 600_000
-    test "Quick Phoenix endurance (5 min, 100 concurrent, 20 query types)" do
-      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
+    test "Quick Phoenix endurance (5 min, 100 concurrent, 512 query types)" do
+      IO.puts("Query variety: 512 mandata_captate combinations (2016-2025), LIMIT 1k-50k")
       run_endurance_test(:phoenix, 100, 5 * 60 * 1000, "Phoenix Quick Endurance")
     end
 
     @tag :endurance_quick
     @tag timeout: 600_000
-    test "Quick HTTP endurance (5 min, 50 concurrent, 20 query types)", %{client: client} do
-      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
+    test "Quick HTTP endurance (5 min, 50 concurrent, 512 query types)", %{client: client} do
+      IO.puts("Query variety: 512 mandata_captate combinations (2016-2025), LIMIT 1k-50k")
       run_endurance_test(:http, 50, 5 * 60 * 1000, "HTTP Quick Endurance", client: client)
     end
   end
@@ -490,7 +492,7 @@ defmodule SaturationTest do
     Task.await_many(workers, duration_ms + 60_000)
   end
 
-  defp worker_loop(type, client, metrics_agent, start_time, duration_ms, _worker_id) do
+  defp worker_loop(type, client, metrics_agent, start_time, duration_ms, worker_id) do
     elapsed = System.monotonic_time(:millisecond) - start_time
 
     if elapsed < duration_ms do
@@ -519,7 +521,7 @@ defmodule SaturationTest do
       Process.sleep(10)
 
       # Continue loop
-      worker_loop(type, client, metrics_agent, start_time, duration_ms, _worker_id)
+      worker_loop(type, client, metrics_agent, start_time, duration_ms, worker_id)
     end
   end
 
@@ -912,454 +914,221 @@ defmodule SaturationTest do
   end
 
   # ===========================================================================
-  # Mandata Captate Query Variations (20 combinations, LIMIT 10k-50k)
+  # Mandata Captate Query Variations (512 combinations with date slices)
   # ===========================================================================
+  #
+  # 512 unique queries combining:
+  # - 6 granularities: year, quarter, month, week, day, hour
+  # - Date range slices: 2016-2025 (10 years) - full years, halves, quarters
+  # - 8 dimension/measure templates
+  # - LIMIT varying from 1,000 to 50,000
+  #
+  # Goal: Reduce cache effectiveness by varying load patterns across 10 years of data
+  #
+  # CACHED AT COMPILE TIME for performance
 
-  # ADBC SQL queries for mandata_captate
-  defp mandata_captate_query_variations_sql do
-    [
-      # 1. Simple yearly aggregation
-      """
-      SELECT
-        DATE_TRUNC('year', mandata_captate.updated_at),
-        MEASURE(mandata_captate.count)
-      FROM mandata_captate
-      GROUP BY 1
-      LIMIT 10000
-      """,
+  # LIMIT values vary from 1000 to 50000 based on query index
+  @limit_values [
+    1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
+    11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000,
+    21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000,
+    31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000,
+    41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000
+  ]
 
-      # 2. Yearly with multiple measures
-      """
-      SELECT
-        DATE_TRUNC('year', mandata_captate.updated_at),
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.total_amount_sum),
-        MEASURE(mandata_captate.tax_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1
-      LIMIT 15000
-      """,
+  # Pre-compute date ranges at compile time (75 total)
+  @date_ranges (
+    # Full years (10 ranges)
+    years = for year <- 2016..2025 do
+      {"#{year}", "#{year}-01-01", "#{year}-12-31"}
+    end
 
-      # 3. Quarterly by brand
-      """
-      SELECT
-        DATE_TRUNC('quarter', mandata_captate.updated_at),
-        mandata_captate.brand_code,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.total_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 20000
-      """,
+    # Half years - H1/H2 (20 ranges)
+    halves = for year <- 2016..2025, half <- ["H1", "H2"] do
+      case half do
+        "H1" -> {"#{year}-H1", "#{year}-01-01", "#{year}-06-30"}
+        "H2" -> {"#{year}-H2", "#{year}-07-01", "#{year}-12-31"}
+      end
+    end
 
-      # 4. Monthly by market and brand
-      """
-      SELECT
-        DATE_TRUNC('month', mandata_captate.updated_at),
-        mandata_captate.market_code,
-        mandata_captate.brand_code,
-        MEASURE(mandata_captate.count)
-      FROM mandata_captate
-      GROUP BY 1, 2, 3
-      LIMIT 25000
-      """,
+    # Quarters (40 ranges)
+    quarters = for year <- 2016..2025, q <- 1..4 do
+      {start_month, end_month, end_day} = case q do
+        1 -> {"01", "03", "31"}
+        2 -> {"04", "06", "30"}
+        3 -> {"07", "09", "30"}
+        4 -> {"10", "12", "31"}
+      end
+      {"#{year}-Q#{q}", "#{year}-#{start_month}-01", "#{year}-#{end_month}-#{end_day}"}
+    end
 
-      # 5. Weekly with all amount measures
-      """
-      SELECT
-        DATE_TRUNC('week', mandata_captate.updated_at),
-        MEASURE(mandata_captate.total_amount_sum),
-        MEASURE(mandata_captate.subtotal_amount_sum),
-        MEASURE(mandata_captate.tax_amount_sum),
-        MEASURE(mandata_captate.discount_total_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1
-      LIMIT 30000
-      """,
-
-      # 6. Daily by financial status
-      """
-      SELECT
-        DATE_TRUNC('day', mandata_captate.updated_at),
-        mandata_captate.financial_status,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.total_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 35000
-      """,
-
-      # 7. Hourly (high granularity)
-      """
-      SELECT
-        DATE_TRUNC('hour', mandata_captate.updated_at),
-        MEASURE(mandata_captate.count)
-      FROM mandata_captate
-      GROUP BY 1
-      LIMIT 50000
-      """,
-
-      # 8. Yearly by fulfillment status
-      """
-      SELECT
-        DATE_TRUNC('year', mandata_captate.updated_at),
-        mandata_captate.fulfillment_status,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.customer_id_distinct)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 12000
-      """,
-
-      # 9. Quarterly with distinct counts
-      """
-      SELECT
-        DATE_TRUNC('quarter', mandata_captate.updated_at),
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.customer_id_distinct),
-        MEASURE(mandata_captate.total_amount_distinct)
-      FROM mandata_captate
-      GROUP BY 1
-      LIMIT 18000
-      """,
-
-      # 10. Monthly by brand with delivery
-      """
-      SELECT
-        DATE_TRUNC('month', mandata_captate.updated_at),
-        mandata_captate.brand_code,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.delivery_subtotal_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 22000
-      """,
-
-      # 11. Weekly by market, brand, financial status
-      """
-      SELECT
-        DATE_TRUNC('week', mandata_captate.updated_at),
-        mandata_captate.market_code,
-        mandata_captate.brand_code,
-        mandata_captate.financial_status,
-        MEASURE(mandata_captate.count)
-      FROM mandata_captate
-      GROUP BY 1, 2, 3, 4
-      LIMIT 40000
-      """,
-
-      # 12. Daily comprehensive measures
-      """
-      SELECT
-        DATE_TRUNC('day', mandata_captate.updated_at),
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.customer_id_sum),
-        MEASURE(mandata_captate.total_amount_sum),
-        MEASURE(mandata_captate.subtotal_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1
-      LIMIT 45000
-      """,
-
-      # 13. Yearly full dimension breakdown
-      """
-      SELECT
-        DATE_TRUNC('year', mandata_captate.updated_at),
-        mandata_captate.market_code,
-        mandata_captate.brand_code,
-        mandata_captate.fulfillment_status,
-        mandata_captate.financial_status,
-        MEASURE(mandata_captate.count)
-      FROM mandata_captate
-      GROUP BY 1, 2, 3, 4, 5
-      LIMIT 50000
-      """,
-
-      # 14. Quarterly all amounts
-      """
-      SELECT
-        DATE_TRUNC('quarter', mandata_captate.updated_at),
-        mandata_captate.brand_code,
-        MEASURE(mandata_captate.total_amount_sum),
-        MEASURE(mandata_captate.tax_amount_sum),
-        MEASURE(mandata_captate.subtotal_amount_sum),
-        MEASURE(mandata_captate.discount_total_amount_sum),
-        MEASURE(mandata_captate.delivery_subtotal_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 28000
-      """,
-
-      # 15. Monthly customer metrics
-      """
-      SELECT
-        DATE_TRUNC('month', mandata_captate.updated_at),
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.customer_id_sum),
-        MEASURE(mandata_captate.customer_id_distinct)
-      FROM mandata_captate
-      GROUP BY 1
-      LIMIT 15000
-      """,
-
-      # 16. Weekly by fulfillment and financial
-      """
-      SELECT
-        DATE_TRUNC('week', mandata_captate.updated_at),
-        mandata_captate.fulfillment_status,
-        mandata_captate.financial_status,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.total_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2, 3
-      LIMIT 35000
-      """,
-
-      # 17. Daily by market only
-      """
-      SELECT
-        DATE_TRUNC('day', mandata_captate.updated_at),
-        mandata_captate.market_code,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.total_amount_sum),
-        MEASURE(mandata_captate.customer_id_distinct)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 42000
-      """,
-
-      # 18. Hourly by brand
-      """
-      SELECT
-        DATE_TRUNC('hour', mandata_captate.updated_at),
-        mandata_captate.brand_code,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.total_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 50000
-      """,
-
-      # 19. Yearly tax analysis
-      """
-      SELECT
-        DATE_TRUNC('year', mandata_captate.updated_at),
-        mandata_captate.market_code,
-        MEASURE(mandata_captate.tax_amount_sum),
-        MEASURE(mandata_captate.tax_amount_distinct),
-        MEASURE(mandata_captate.total_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2
-      LIMIT 20000
-      """,
-
-      # 20. Monthly comprehensive with all measures
-      """
-      SELECT
-        DATE_TRUNC('month', mandata_captate.updated_at),
-        mandata_captate.brand_code,
-        mandata_captate.market_code,
-        MEASURE(mandata_captate.count),
-        MEASURE(mandata_captate.customer_id_distinct),
-        MEASURE(mandata_captate.total_amount_sum),
-        MEASURE(mandata_captate.subtotal_amount_sum),
-        MEASURE(mandata_captate.tax_amount_sum),
-        MEASURE(mandata_captate.discount_total_amount_sum)
-      FROM mandata_captate
-      GROUP BY 1, 2, 3
-      LIMIT 50000
-      """
+    # Rolling periods from 2025 (5 ranges)
+    rolling = [
+      {"Last1Y", "2024-01-01", "2025-12-31"},
+      {"Last2Y", "2023-01-01", "2025-12-31"},
+      {"Last3Y", "2022-01-01", "2025-12-31"},
+      {"Last5Y", "2020-01-01", "2025-12-31"},
+      {"AllTime", "2016-01-01", "2025-12-31"}
     ]
-  end
 
-  # HTTP queries for mandata_captate (same format for Cube HTTP API and Phoenix)
-  defp mandata_captate_query_variations_http, do: mandata_captate_query_variations_phoenix()
+    years ++ halves ++ quarters ++ rolling
+  )
 
-  # Phoenix/Cube HTTP queries for mandata_captate
-  defp mandata_captate_query_variations_phoenix do
-    [
-      # 1. Simple yearly
-      %{
-        "measures" => ["mandata_captate.count"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
-        "limit" => 10000
-      },
+  @granularities ~w(year quarter month week day hour)
 
-      # 2. Yearly with multiple measures
-      %{
-        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum", "mandata_captate.tax_amount_sum"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
-        "limit" => 15000
-      },
-
-      # 3. Quarterly by brand
-      %{
-        "dimensions" => ["mandata_captate.brand_code"],
-        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "quarter"}],
-        "limit" => 20000
-      },
-
-      # 4. Monthly by market and brand
-      %{
-        "dimensions" => ["mandata_captate.market_code", "mandata_captate.brand_code"],
-        "measures" => ["mandata_captate.count"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
-        "limit" => 25000
-      },
-
-      # 5. Weekly with all amount measures
-      %{
-        "measures" => [
-          "mandata_captate.total_amount_sum",
-          "mandata_captate.subtotal_amount_sum",
-          "mandata_captate.tax_amount_sum",
-          "mandata_captate.discount_total_amount_sum"
-        ],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "week"}],
-        "limit" => 30000
-      },
-
-      # 6. Daily by financial status
-      %{
-        "dimensions" => ["mandata_captate.financial_status"],
-        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "day"}],
-        "limit" => 35000
-      },
-
-      # 7. Hourly
-      %{
-        "measures" => ["mandata_captate.count"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "hour"}],
-        "limit" => 50000
-      },
-
-      # 8. Yearly by fulfillment
-      %{
-        "dimensions" => ["mandata_captate.fulfillment_status"],
-        "measures" => ["mandata_captate.count", "mandata_captate.customer_id_distinct"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
-        "limit" => 12000
-      },
-
-      # 9. Quarterly with distinct counts
-      %{
-        "measures" => ["mandata_captate.count", "mandata_captate.customer_id_distinct", "mandata_captate.total_amount_distinct"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "quarter"}],
-        "limit" => 18000
-      },
-
-      # 10. Monthly by brand with delivery
-      %{
-        "dimensions" => ["mandata_captate.brand_code"],
-        "measures" => ["mandata_captate.count", "mandata_captate.delivery_subtotal_amount_sum"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
-        "limit" => 22000
-      },
-
-      # 11. Weekly by market, brand, financial status
-      %{
-        "dimensions" => ["mandata_captate.market_code", "mandata_captate.brand_code", "mandata_captate.financial_status"],
-        "measures" => ["mandata_captate.count"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "week"}],
-        "limit" => 40000
-      },
-
-      # 12. Daily comprehensive measures
-      %{
-        "measures" => [
-          "mandata_captate.count",
-          "mandata_captate.customer_id_sum",
-          "mandata_captate.total_amount_sum",
-          "mandata_captate.subtotal_amount_sum"
-        ],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "day"}],
-        "limit" => 45000
-      },
-
-      # 13. Yearly full dimension breakdown
-      %{
-        "dimensions" => [
-          "mandata_captate.market_code",
-          "mandata_captate.brand_code",
-          "mandata_captate.fulfillment_status",
-          "mandata_captate.financial_status"
-        ],
-        "measures" => ["mandata_captate.count"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
-        "limit" => 50000
-      },
-
-      # 14. Quarterly all amounts
-      %{
-        "dimensions" => ["mandata_captate.brand_code"],
-        "measures" => [
-          "mandata_captate.total_amount_sum",
-          "mandata_captate.tax_amount_sum",
-          "mandata_captate.subtotal_amount_sum",
-          "mandata_captate.discount_total_amount_sum",
-          "mandata_captate.delivery_subtotal_amount_sum"
-        ],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "quarter"}],
-        "limit" => 28000
-      },
-
-      # 15. Monthly customer metrics
-      %{
-        "measures" => ["mandata_captate.count", "mandata_captate.customer_id_sum", "mandata_captate.customer_id_distinct"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
-        "limit" => 15000
-      },
-
-      # 16. Weekly by fulfillment and financial
-      %{
-        "dimensions" => ["mandata_captate.fulfillment_status", "mandata_captate.financial_status"],
-        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "week"}],
-        "limit" => 35000
-      },
-
-      # 17. Daily by market
-      %{
-        "dimensions" => ["mandata_captate.market_code"],
-        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum", "mandata_captate.customer_id_distinct"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "day"}],
-        "limit" => 42000
-      },
-
-      # 18. Hourly by brand
-      %{
-        "dimensions" => ["mandata_captate.brand_code"],
-        "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "hour"}],
-        "limit" => 50000
-      },
-
-      # 19. Yearly tax analysis
-      %{
-        "dimensions" => ["mandata_captate.market_code"],
-        "measures" => ["mandata_captate.tax_amount_sum", "mandata_captate.tax_amount_distinct", "mandata_captate.total_amount_sum"],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "year"}],
-        "limit" => 20000
-      },
-
-      # 20. Monthly comprehensive
-      %{
-        "dimensions" => ["mandata_captate.brand_code", "mandata_captate.market_code"],
-        "measures" => [
-          "mandata_captate.count",
-          "mandata_captate.customer_id_distinct",
-          "mandata_captate.total_amount_sum",
-          "mandata_captate.subtotal_amount_sum",
-          "mandata_captate.tax_amount_sum",
-          "mandata_captate.discount_total_amount_sum"
-        ],
-        "timeDimensions" => [%{"dimension" => "mandata_captate.updated_at", "granularity" => "month"}],
-        "limit" => 50000
-      }
+  # Pre-generate and cache 512 SQL queries at compile time
+  @cached_sql_queries (
+    limit_values = [
+      1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
+      11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000,
+      21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000,
+      31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000,
+      41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000
     ]
-  end
+
+    date_ranges = (
+      years = for year <- 2016..2025, do: {"#{year}", "#{year}-01-01", "#{year}-12-31"}
+      halves = for year <- 2016..2025, half <- ["H1", "H2"] do
+        case half do
+          "H1" -> {"#{year}-H1", "#{year}-01-01", "#{year}-06-30"}
+          "H2" -> {"#{year}-H2", "#{year}-07-01", "#{year}-12-31"}
+        end
+      end
+      quarters = for year <- 2016..2025, q <- 1..4 do
+        {sm, em, ed} = case q do
+          1 -> {"01", "03", "31"}
+          2 -> {"04", "06", "30"}
+          3 -> {"07", "09", "30"}
+          4 -> {"10", "12", "31"}
+        end
+        {"#{year}-Q#{q}", "#{year}-#{sm}-01", "#{year}-#{em}-#{ed}"}
+      end
+      rolling = [
+        {"Last1Y", "2024-01-01", "2025-12-31"},
+        {"Last2Y", "2023-01-01", "2025-12-31"},
+        {"Last3Y", "2022-01-01", "2025-12-31"},
+        {"Last5Y", "2020-01-01", "2025-12-31"},
+        {"AllTime", "2016-01-01", "2025-12-31"}
+      ]
+      years ++ halves ++ quarters ++ rolling
+    )
+
+    granularities = ~w(year quarter month week day hour)
+
+    # SQL template generator
+    build_sql = fn template_id, granularity, date_start, date_end, limit ->
+      base = "SELECT DATE_TRUNC('#{granularity}', mandata_captate.updated_at)"
+      where = "WHERE mandata_captate.updated_at >= '#{date_start}' AND mandata_captate.updated_at <= '#{date_end}'"
+
+      case template_id do
+        1 -> "#{base}, MEASURE(mandata_captate.count) FROM mandata_captate #{where} GROUP BY 1 LIMIT #{limit}"
+        2 -> "#{base}, MEASURE(mandata_captate.count), MEASURE(mandata_captate.total_amount_sum), MEASURE(mandata_captate.tax_amount_sum) FROM mandata_captate #{where} GROUP BY 1 LIMIT #{limit}"
+        3 -> "#{base}, mandata_captate.brand_code, MEASURE(mandata_captate.count), MEASURE(mandata_captate.total_amount_sum) FROM mandata_captate #{where} GROUP BY 1, 2 LIMIT #{limit}"
+        4 -> "#{base}, mandata_captate.market_code, mandata_captate.brand_code, MEASURE(mandata_captate.count) FROM mandata_captate #{where} GROUP BY 1, 2, 3 LIMIT #{limit}"
+        5 -> "#{base}, MEASURE(mandata_captate.total_amount_sum), MEASURE(mandata_captate.subtotal_amount_sum), MEASURE(mandata_captate.tax_amount_sum), MEASURE(mandata_captate.discount_total_amount_sum) FROM mandata_captate #{where} GROUP BY 1 LIMIT #{limit}"
+        6 -> "#{base}, mandata_captate.financial_status, MEASURE(mandata_captate.count), MEASURE(mandata_captate.total_amount_sum) FROM mandata_captate #{where} GROUP BY 1, 2 LIMIT #{limit}"
+        7 -> "#{base}, MEASURE(mandata_captate.count), MEASURE(mandata_captate.customer_id_sum), MEASURE(mandata_captate.customer_id_distinct) FROM mandata_captate #{where} GROUP BY 1 LIMIT #{limit}"
+        8 -> "#{base}, mandata_captate.market_code, mandata_captate.brand_code, mandata_captate.financial_status, MEASURE(mandata_captate.count), MEASURE(mandata_captate.total_amount_sum) FROM mandata_captate #{where} GROUP BY 1, 2, 3, 4 LIMIT #{limit}"
+      end
+    end
+
+    # Generate all queries
+    date_ranges
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {{_label, date_start, date_end}, date_idx} ->
+      granularities
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {granularity, gran_idx} ->
+        1..8
+        |> Enum.map(fn template_id ->
+          query_idx = date_idx * 48 + gran_idx * 8 + template_id - 1
+          limit = Enum.at(limit_values, rem(query_idx, length(limit_values)))
+          build_sql.(template_id, granularity, date_start, date_end, limit)
+        end)
+      end)
+    end)
+    |> Enum.take(512)
+  )
+
+  # Pre-generate and cache 512 Phoenix/HTTP queries at compile time
+  @cached_phoenix_queries (
+    limit_values = [
+      1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
+      11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000,
+      21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000,
+      31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000,
+      41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000
+    ]
+
+    date_ranges = (
+      years = for year <- 2016..2025, do: {"#{year}", "#{year}-01-01", "#{year}-12-31"}
+      halves = for year <- 2016..2025, half <- ["H1", "H2"] do
+        case half do
+          "H1" -> {"#{year}-H1", "#{year}-01-01", "#{year}-06-30"}
+          "H2" -> {"#{year}-H2", "#{year}-07-01", "#{year}-12-31"}
+        end
+      end
+      quarters = for year <- 2016..2025, q <- 1..4 do
+        {sm, em, ed} = case q do
+          1 -> {"01", "03", "31"}
+          2 -> {"04", "06", "30"}
+          3 -> {"07", "09", "30"}
+          4 -> {"10", "12", "31"}
+        end
+        {"#{year}-Q#{q}", "#{year}-#{sm}-01", "#{year}-#{em}-#{ed}"}
+      end
+      rolling = [
+        {"Last1Y", "2024-01-01", "2025-12-31"},
+        {"Last2Y", "2023-01-01", "2025-12-31"},
+        {"Last3Y", "2022-01-01", "2025-12-31"},
+        {"Last5Y", "2020-01-01", "2025-12-31"},
+        {"AllTime", "2016-01-01", "2025-12-31"}
+      ]
+      years ++ halves ++ quarters ++ rolling
+    )
+
+    granularities = ~w(year quarter month week day hour)
+
+    # Phoenix template generator
+    build_phoenix = fn template_id, granularity, date_start, date_end, limit ->
+      time_dim = %{"dimension" => "mandata_captate.updated_at", "granularity" => granularity, "dateRange" => [date_start, date_end]}
+
+      case template_id do
+        1 -> %{"measures" => ["mandata_captate.count"], "timeDimensions" => [time_dim], "limit" => limit}
+        2 -> %{"measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum", "mandata_captate.tax_amount_sum"], "timeDimensions" => [time_dim], "limit" => limit}
+        3 -> %{"dimensions" => ["mandata_captate.brand_code"], "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"], "timeDimensions" => [time_dim], "limit" => limit}
+        4 -> %{"dimensions" => ["mandata_captate.market_code", "mandata_captate.brand_code"], "measures" => ["mandata_captate.count"], "timeDimensions" => [time_dim], "limit" => limit}
+        5 -> %{"measures" => ["mandata_captate.total_amount_sum", "mandata_captate.subtotal_amount_sum", "mandata_captate.tax_amount_sum", "mandata_captate.discount_total_amount_sum"], "timeDimensions" => [time_dim], "limit" => limit}
+        6 -> %{"dimensions" => ["mandata_captate.financial_status"], "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"], "timeDimensions" => [time_dim], "limit" => limit}
+        7 -> %{"measures" => ["mandata_captate.count", "mandata_captate.customer_id_sum", "mandata_captate.customer_id_distinct"], "timeDimensions" => [time_dim], "limit" => limit}
+        8 -> %{"dimensions" => ["mandata_captate.market_code", "mandata_captate.brand_code", "mandata_captate.financial_status"], "measures" => ["mandata_captate.count", "mandata_captate.total_amount_sum"], "timeDimensions" => [time_dim], "limit" => limit}
+      end
+    end
+
+    # Generate all queries
+    date_ranges
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {{_label, date_start, date_end}, date_idx} ->
+      granularities
+      |> Enum.with_index()
+      |> Enum.flat_map(fn {granularity, gran_idx} ->
+        1..8
+        |> Enum.map(fn template_id ->
+          query_idx = date_idx * 48 + gran_idx * 8 + template_id - 1
+          limit = Enum.at(limit_values, rem(query_idx, length(limit_values)))
+          build_phoenix.(template_id, granularity, date_start, date_end, limit)
+        end)
+      end)
+    end)
+    |> Enum.take(512)
+  )
+
+  # Return cached SQL queries (no regeneration)
+  defp mandata_captate_query_variations_sql, do: @cached_sql_queries
+
+  # Return cached Phoenix/HTTP queries (no regeneration)
+  defp mandata_captate_query_variations_http, do: @cached_phoenix_queries
+  defp mandata_captate_query_variations_phoenix, do: @cached_phoenix_queries
 
   # Uses orders_no_preagg cube (no pre-aggregations - hits DB directly)
   defp cube_query_no_preagg_http do

@@ -21,10 +21,11 @@ services:
       - 4445:4445
     environment:
       CUBEJS_DB_QUERY_TIMEOUT: 60m
-      CUBEJS_CONCURRENCY: 8
+      CUBEJS_CONCURRENCY: 128
       CUBEJS_PG_SQL_PORT: 15432
       CUBEJS_ADBC_PORT: 8120
       CUBEJS_SQL_PORT: 4445
+      CUBEJS_DB_MAX_POOL: 128
       CUBEJS_DB_TYPE: postgres
       CUBEJS_DB_PORT: 5432
       CUBEJS_DB_NAME: pot_examples_dev
@@ -34,9 +35,9 @@ services:
       CUBEJS_CUBESTORE_HOST: cubestore_router
       CUBEJS_API_SECRET: secret
       CUBEJS_DEV_MODE: true
-      #DEBUG_LOG: true
-      CUBESQL_LOG_LEVEL: trace
-      CUBEJS_LOG_LEVEL: info
+      DEBUG_LOG: true
+      CUBESQL_LOG_LEVEL: debug
+      CUBEJS_LOG_LEVEL: debug
       CUBESQL_ARROW_RESULTS_CACHE_ENABLED: true
     volumes:
       - ./:/cube/conf
@@ -52,7 +53,7 @@ services:
     image: octanix/cube:dev #docker.io/cubejs/cube:latest
     environment:
       CUBEJS_DB_QUERY_TIMEOUT: 60m
-      CUBEJS_REFRESH_WORKER_CONCURRENCY: 4
+      CUBEJS_REFRESH_WORKER_CONCURRENCY: 24
       CUBEJS_DB_TYPE: postgres
       CUBEJS_DB_PORT: 5432
       CUBEJS_DB_NAME: pot_examples_dev
