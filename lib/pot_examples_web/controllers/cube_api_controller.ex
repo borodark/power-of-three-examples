@@ -32,6 +32,7 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
   require Logger
 
   alias Adbc.Result
+  alias ExamplesOfPoT.AdbcResultCache
 
   @doc """
   Handles POST requests to /cubejs-api/v1/load
@@ -304,18 +305,25 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
 
   # Execute query via ADBC - native Arrow columnar results
   defp execute_adbc(sql) do
-    conn = Adbc.CubePool.get_connection()
+    case AdbcResultCache.get(sql) do
+      {:hit, cached} ->
+        {:ok, cached}
 
-    case Adbc.Connection.query(conn, sql) do
-      {:ok, result} ->
-        # Materialize and convert to columnar map
-        materialized = Result.materialize(result)
-        columnar_data = Result.to_map(materialized)
-        {:ok, columnar_data}
+      :miss ->
+        conn = Adbc.CubePool.get_connection()
 
-      {:error, reason} ->
-        Logger.error("ADBC query failed: #{inspect(reason)}")
-        {:error, "Query execution failed: #{inspect(reason)}"}
+        case Adbc.Connection.query(conn, sql) do
+          {:ok, result} ->
+            # Materialize and convert to columnar map
+            materialized = Result.materialize(result)
+            columnar_data = Result.to_map(materialized)
+            :ok = AdbcResultCache.put(sql, columnar_data)
+            {:ok, columnar_data}
+
+          {:error, reason} ->
+            Logger.error("ADBC query failed: #{inspect(reason)}")
+            {:error, "Query execution failed: #{inspect(reason)}"}
+        end
     end
   end
 

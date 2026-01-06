@@ -14,6 +14,11 @@ config :pot_examples,
   # Schema path for CompilerApi (Cube semantic layer)
   schema_path: Path.expand("../model/cubes", __DIR__)
 
+config :pot_examples, ExamplesOfPoT.AdbcResultCache,
+  enabled: true,
+  ttl_ms: 60_000,
+  cleanup_interval_ms: 30_000
+
 config :pot_examples, Postgres.Repo,
   port: 7432,
   stacktrace: true,

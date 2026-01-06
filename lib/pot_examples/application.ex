@@ -16,6 +16,8 @@ defmodule ExamplesOfPoT.Application do
       # {ExamplesOfPoT.Worker, arg},
       # Cube ADBC connection pool
       # Get Cube pool configuration
+      {ExamplesOfPoT.AdbcResultCache,
+       Application.get_env(:pot_examples, ExamplesOfPoT.AdbcResultCache, [])},
       {Adbc.CubePool, Application.get_env(:pot_examples, Adbc.CubePool, [])},
 
       # Start to serve requests, typically the last entry

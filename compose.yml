@@ -70,7 +70,7 @@ services:
 
   cubestore_router:
     restart: always
-    image: borodark/cubestore:dev #docker.io/cubejs/cubestore:latest
+    image: octanix/cubestore:dev #docker.io/cubejs/cubestore:latest
     ports:
       - 3306:3306
     environment:
@@ -86,7 +86,7 @@ services:
 
   cubestore_worker_1:
     restart: always
-    image: borodark/cubestore:dev #docker.io/cubejs/cubestore:latest
+    image: octanix/cubestore:dev #docker.io/cubejs/cubestore:latest
     environment:
       CUBESTORE_WORKERS: cubestore_worker_1:10001,cubestore_worker_2:10002
       CUBESTORE_SERVER_NAME: cubestore_worker_1:10001
@@ -100,7 +100,7 @@ services:
 
   cubestore_worker_2:
     restart: always
-    image: borodark/cubestore:dev # docker.io/cubejs/cubestore:latest
+    image: octanix/cubestore:dev # docker.io/cubejs/cubestore:latest
     environment:
       CUBESTORE_WORKERS: cubestore_worker_1:10001,cubestore_worker_2:10002
       CUBESTORE_SERVER_NAME: cubestore_worker_2:10002
