@@ -20,7 +20,7 @@ defmodule ExamplesOfPoT.MixProject do
   def application do
     [
       mod: {ExamplesOfPoT.Application, []},
-      extra_applications: [:logger, :runtime_tools, :wx, :observer]
+      extra_applications: [:logger, :runtime_tools, :wx, :observer, :os_mon]
     ]
   end
 
