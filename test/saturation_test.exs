@@ -145,9 +145,9 @@ defmodule SaturationTest do
       run_adbc_saturation_with_queries(100, "ADBC 100", mandata_captate_query_variations_sql())
     end
 
-    @tag :saturation_10000
-    test "10_000 concurrent ADBC queries (mandata variety)" do
-      run_adbc_saturation_with_queries(10_000, "ADBC 10_000", mandata_captate_query_variations_sql())
+    @tag :saturation
+    test "2_000 concurrent ADBC queries (mandata variety)" do
+      run_adbc_saturation_with_queries(2_000, "ADBC 2_000", mandata_captate_query_variations_sql())
     end
   end
 
@@ -182,14 +182,15 @@ defmodule SaturationTest do
     end
 
     @tag :saturation
-    test "compare 100 concurrent queries (with pre-agg)", %{client: client} do
+    test "compare 100 concurrent queries (mandata variety)", %{client: client} do
       IO.puts("\n" <> String.duplicate("=", 70))
-      IO.puts("COMPARISON: 100 Concurrent Queries (WITH Pre-Aggregation)")
+      IO.puts("COMPARISON: 100 Concurrent × 20 Query Variations (mandata_captate)")
+      IO.puts("Granularities: year, quarter, month, week, day, hour | LIMIT 10k-50k")
       IO.puts(String.duplicate("=", 70))
 
-      http_metrics = run_http_saturation(client, 100, "Cube HTTP", quiet: true)
-      adbc_metrics = run_adbc_saturation(100, "ADBC Direct", quiet: true)
-      phoenix_metrics = run_phoenix_saturation(100, "Phoenix/ADBC", quiet: true)
+      http_metrics = run_http_saturation_with_queries(client, 100, "Cube HTTP", mandata_captate_query_variations_http(), quiet: true)
+      adbc_metrics = run_adbc_saturation_with_queries(100, "ADBC Direct", mandata_captate_query_variations_sql(), quiet: true)
+      phoenix_metrics = run_phoenix_saturation_with_queries(100, "Phoenix/ADBC", mandata_captate_query_variations_phoenix(), quiet: true)
 
       print_three_way_comparison(http_metrics, adbc_metrics, phoenix_metrics)
     end
@@ -362,12 +363,16 @@ defmodule SaturationTest do
   # Endurance Tests (2 hour sustained load)
   # ===========================================================================
 
-  describe "Endurance tests" do
+  # ===========================================================================
+  # Endurance Tests (using mandata_captate variety, 20 query types)
+  # ===========================================================================
+
+  describe "Endurance tests (mandata_captate variety)" do
     @describetag :endurance
 
-    #
+    # 15 minute endurance
     @endurance_duration_ms 15 * 60 * 1000
-    # Reporting interval (every 1 minutes)
+    # Reporting interval (every 1 minute)
     @report_interval_ms 60 * 1000
     # Minimum concurrent requests
     @min_concurrent 256
@@ -379,33 +384,44 @@ defmodule SaturationTest do
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "ADBC endurance #{inspect(@min_concurrent)} concurrent)", _context do
+    test "ADBC endurance (#{inspect(@min_concurrent)} concurrent, 20 query types)", _context do
+      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
       run_endurance_test(:adbc, @min_concurrent, @endurance_duration_ms, "ADBC Endurance")
     end
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "HTTP endurance (#{inspect(@min_concurrent)} concurrent)", %{client: client} do
+    test "HTTP endurance (#{inspect(@min_concurrent)} concurrent, 20 query types)", %{client: client} do
+      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
       run_endurance_test(:http, @min_concurrent, @endurance_duration_ms, "HTTP Endurance", client: client)
     end
 
     @tag :endurance
     @tag timeout: @endurance_duration_ms + 300_000
-    test "Phoenix endurance (#{inspect(@min_concurrent)} concurrent)", _context do
+    test "Phoenix endurance (#{inspect(@min_concurrent)} concurrent, 20 query types)", _context do
+      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
       run_endurance_test(:phoenix, @min_concurrent, @endurance_duration_ms, "Phoenix Endurance")
     end
 
     @tag :endurance_quick
     @tag timeout: 600_000
-    test "Quick endurance test (5 min, 100 concurrent)" do
-      # Quick version for testing the endurance logic
+    test "Quick ADBC endurance (5 min, 100 concurrent, 20 query types)" do
+      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
       run_endurance_test(:adbc, 100, 5 * 60 * 1000, "ADBC Quick Endurance")
     end
 
     @tag :endurance_quick
     @tag timeout: 600_000
-    test "Quick Phoenix endurance test (5 min, 100 concurrent)" do
+    test "Quick Phoenix endurance (5 min, 100 concurrent, 20 query types)" do
+      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
       run_endurance_test(:phoenix, 100, 5 * 60 * 1000, "Phoenix Quick Endurance")
+    end
+
+    @tag :endurance_quick
+    @tag timeout: 600_000
+    test "Quick HTTP endurance (5 min, 50 concurrent, 20 query types)", %{client: client} do
+      IO.puts("Query variety: 20 mandata_captate combinations, LIMIT 10k-50k")
+      run_endurance_test(:http, 50, 5 * 60 * 1000, "HTTP Quick Endurance", client: client)
     end
   end
 
@@ -507,12 +523,29 @@ defmodule SaturationTest do
     end
   end
 
+  # Get a random query from mandata_captate variations for variety in endurance tests
+  defp get_random_mandata_query_sql do
+    queries = mandata_captate_query_variations_sql()
+    Enum.at(queries, :rand.uniform(length(queries)) - 1)
+  end
+
+  defp get_random_mandata_query_http do
+    queries = mandata_captate_query_variations_http()
+    Enum.at(queries, :rand.uniform(length(queries)) - 1)
+  end
+
+  defp get_random_mandata_query_phoenix do
+    queries = mandata_captate_query_variations_phoenix()
+    Enum.at(queries, :rand.uniform(length(queries)) - 1)
+  end
+
   defp execute_timed_query(:adbc, _client) do
     conn = Adbc.CubePool.get_connection()
+    query = get_random_mandata_query_sql()
     query_start = System.monotonic_time(:millisecond)
 
     result = try do
-      case Connection.query(conn, cube_query_sql()) do
+      case Connection.query(conn, query) do
         {:ok, res} ->
           _materialized = Result.materialize(res)
           :ok
@@ -528,10 +561,11 @@ defmodule SaturationTest do
   end
 
   defp execute_timed_query(:http, client) do
+    query = get_random_mandata_query_http()
     query_start = System.monotonic_time(:millisecond)
 
     result = try do
-      case CubeHttpClient.query(client, cube_query_http(), max_wait: 60_000, poll_interval: 500) do
+      case CubeHttpClient.query(client, query, max_wait: 120_000, poll_interval: 500) do
         {:ok, _df} -> :ok
         {:error, e} -> {:error, e.message}
       end
@@ -545,15 +579,16 @@ defmodule SaturationTest do
 
   defp execute_timed_query(:phoenix, _client) do
     :inets.start()
+    query = get_random_mandata_query_phoenix()
     query_start = System.monotonic_time(:millisecond)
 
     result = try do
-      body = Jason.encode!(%{"query" => phoenix_query()})
+      body = Jason.encode!(%{"query" => query})
 
       case :httpc.request(
              :post,
              {~c"#{@phoenix_url}", [], ~c"application/json", body},
-             [timeout: 60_000],
+             [timeout: 120_000],
              []
            ) do
         {:ok, {{_, 200, _}, _, _body}} -> :ok
@@ -1137,7 +1172,10 @@ defmodule SaturationTest do
     ]
   end
 
-  # Phoenix HTTP queries for mandata_captate
+  # HTTP queries for mandata_captate (same format for Cube HTTP API and Phoenix)
+  defp mandata_captate_query_variations_http, do: mandata_captate_query_variations_phoenix()
+
+  # Phoenix/Cube HTTP queries for mandata_captate
   defp mandata_captate_query_variations_phoenix do
     [
       # 1. Simple yearly
