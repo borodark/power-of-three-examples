@@ -10,15 +10,22 @@
 
   Key Results
 
-  Pre-Aggregation Impact (ADBC):
-  With Pre-Agg:    2.48ms avg,  10,000 qps
-  No Pre-Agg:   2,317ms avg,      22 qps
-  Speedup: 934x faster
+  Three-Way Comparison (mandata_captate, 100 concurrent, 512 variants):
+  - Cube HTTP:     2958.97ms avg, 13.06 qps
+  - ADBC Direct:     42.74ms avg, 63.69 qps
+  - Phoenix/ADBC:  1346.18ms avg, 24.15 qps
 
-  HTTP vs ADBC (with pre-agg):
-  HTTP:   428ms avg,    167 qps
-  ADBC:     4ms avg, 12,500 qps
-  ADBC is ~100x faster
+  Variety (7 variants, 100 concurrent):
+  - HTTP: 1051.36ms avg, 74.29 qps
+  - ADBC:   38.73ms avg, 757.58 qps
+
+  Mandata variety (512 variants, 100 concurrent):
+  - ADBC:    38.58ms avg, 65.7 qps
+  - Phoenix: 1419.59ms avg, 21.3 qps
+
+  High concurrency (mandata variety):
+  - ADBC 1000: 284.81ms avg, 41.83 qps
+  - ADBC 2000: 587.45ms avg, 38.4 qps
 
   Usage
 
@@ -29,4 +36,3 @@
 
   # Include stress tests (1000 concurrent)
   mix test test/saturation_test.exs --include saturation --include saturation_1000
-
