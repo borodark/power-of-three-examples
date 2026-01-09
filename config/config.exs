@@ -14,10 +14,12 @@ config :pot_examples,
   # Schema path for CompilerApi (Cube semantic layer)
   schema_path: Path.expand("../model/cubes", __DIR__)
 
+config :adbc, :drivers, [:cube]
+
 config :pot_examples, ExamplesOfPoT.AdbcResultCache,
   enabled: true,
   ttl_ms: 60_000,
-  cleanup_interval_ms: 30_000
+  cleanup_interval_ms: 300_000
 
 config :pot_examples, Postgres.Repo,
   port: 7432,
@@ -34,10 +36,12 @@ config :pot_examples, Postgres.Repo,
 
 # Cube ADBC connection pool configuration
 config :pot_examples, Adbc.CubePool,
-  pool_size: 176,
+  pool_size: System.schedulers_online() * 2,
   host: "localhost",
   port: 8120,
   token: "test",
+  driver: :cube,
+  driver_version: "0.1.2",
   username: "username",
   password: "password"
 

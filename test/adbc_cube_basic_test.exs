@@ -7,17 +7,28 @@ defmodule Adbc.CubeBasicTest do
   @moduletag :cube
   @moduletag timeout: 30_000
 
-  # Path to our custom-built Cube driver
-  @cube_driver_path Path.join(:code.priv_dir(:adbc), "lib/libadbc_driver_cube.so")
-
   # Cube server connection details
   @cube_host "localhost"
   @cube_port 8120
 
   setup_all do
-    # Check if the Cube driver library exists
-    unless File.exists?(@cube_driver_path) do
-      raise "Cube driver not found at #{@cube_driver_path}. Run 'make' to build it."
+    # Ensure the Cube driver is available
+    driver_version =
+      Application.get_env(:pot_examples, Adbc.CubePool, [])
+      |> Keyword.get(:driver_version)
+
+    driver_opts = if driver_version, do: [version: driver_version], else: []
+
+    case Adbc.Driver.so_path(:cube, driver_opts) do
+      {:ok, _path} ->
+        :ok
+
+      {:error, reason} ->
+        raise """
+        Cube driver not available: #{reason}
+
+        Ensure config :adbc, :drivers, [:cube] is set and recompile dependencies.
+        """
     end
 
     # Check if cubesqld is running on the Arrow Native port

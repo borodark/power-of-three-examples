@@ -66,10 +66,11 @@ defmodule SaturationTest do
   # Phoenix endpoint (ADBC-backed /cubejs-api/v1/load)
   @phoenix_port 4000
   @phoenix_url "http://localhost:#{@phoenix_port}/cubejs-api/v1/load"
+  @server_connect_timeout_ms 15_000
 
   setup_all do
     # Check HTTP API
-    case :gen_tcp.connect(~c"localhost", @cube_http_port, [:binary], 1000) do
+    case :gen_tcp.connect(~c"localhost", @cube_http_port, [:binary], @server_connect_timeout_ms) do
       {:ok, socket} ->
         :gen_tcp.close(socket)
 
@@ -84,7 +85,7 @@ defmodule SaturationTest do
     end
 
     # Check ADBC server
-    case :gen_tcp.connect(~c"localhost", @cube_adbc_port, [:binary], 1000) do
+    case :gen_tcp.connect(~c"localhost", @cube_adbc_port, [:binary], @server_connect_timeout_ms) do
       {:ok, socket} ->
         :gen_tcp.close(socket)
 
@@ -99,7 +100,7 @@ defmodule SaturationTest do
     end
 
     # Check Phoenix endpoint
-    case :gen_tcp.connect(~c"localhost", @phoenix_port, [:binary], 1000) do
+    case :gen_tcp.connect(~c"localhost", @phoenix_port, [:binary], @server_connect_timeout_ms) do
       {:ok, socket} ->
         :gen_tcp.close(socket)
 
@@ -377,7 +378,7 @@ defmodule SaturationTest do
     # Reporting interval (every 1 minute)
     @report_interval_ms 60 * 1000
     # Minimum concurrent requests
-    @min_concurrent 256
+    @min_concurrent 100
 
     setup do
       {:ok, client} = CubeHttpClient.new(base_url: @cube_http_url)
@@ -904,15 +905,6 @@ defmodule SaturationTest do
     ]
   end
 
-  # Phoenix endpoint query (uses orders_with_preagg via ADBC)
-  defp phoenix_query do
-    %{
-      "dimensions" => ["orders_with_preagg.brand_code"],
-      "measures" => ["orders_with_preagg.count", "orders_with_preagg.total_amount_sum"],
-      "limit" => 50
-    }
-  end
-
   # ===========================================================================
   # Mandata Captate Query Variations (512 combinations with date slices)
   # ===========================================================================
@@ -978,43 +970,6 @@ defmodule SaturationTest do
 
   # Pre-generate and cache 512 SQL queries at compile time
   @cached_sql_queries (
-    limit_values = [
-      1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
-      11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000,
-      21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000,
-      31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000,
-      41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000
-    ]
-
-    date_ranges = (
-      years = for year <- 2016..2025, do: {"#{year}", "#{year}-01-01", "#{year}-12-31"}
-      halves = for year <- 2016..2025, half <- ["H1", "H2"] do
-        case half do
-          "H1" -> {"#{year}-H1", "#{year}-01-01", "#{year}-06-30"}
-          "H2" -> {"#{year}-H2", "#{year}-07-01", "#{year}-12-31"}
-        end
-      end
-      quarters = for year <- 2016..2025, q <- 1..4 do
-        {sm, em, ed} = case q do
-          1 -> {"01", "03", "31"}
-          2 -> {"04", "06", "30"}
-          3 -> {"07", "09", "30"}
-          4 -> {"10", "12", "31"}
-        end
-        {"#{year}-Q#{q}", "#{year}-#{sm}-01", "#{year}-#{em}-#{ed}"}
-      end
-      rolling = [
-        {"Last1Y", "2024-01-01", "2025-12-31"},
-        {"Last2Y", "2023-01-01", "2025-12-31"},
-        {"Last3Y", "2022-01-01", "2025-12-31"},
-        {"Last5Y", "2020-01-01", "2025-12-31"},
-        {"AllTime", "2016-01-01", "2025-12-31"}
-      ]
-      years ++ halves ++ quarters ++ rolling
-    )
-
-    granularities = ~w(year quarter month week day hour)
-
     # SQL template generator
     build_sql = fn template_id, granularity, date_start, date_end, limit ->
       base = "SELECT DATE_TRUNC('#{granularity}', mandata_captate.updated_at)"
@@ -1033,16 +988,16 @@ defmodule SaturationTest do
     end
 
     # Generate all queries
-    date_ranges
+    @date_ranges
     |> Enum.with_index()
     |> Enum.flat_map(fn {{_label, date_start, date_end}, date_idx} ->
-      granularities
+      @granularities
       |> Enum.with_index()
       |> Enum.flat_map(fn {granularity, gran_idx} ->
         1..8
         |> Enum.map(fn template_id ->
           query_idx = date_idx * 48 + gran_idx * 8 + template_id - 1
-          limit = Enum.at(limit_values, rem(query_idx, length(limit_values)))
+          limit = Enum.at(@limit_values, rem(query_idx, length(@limit_values)))
           build_sql.(template_id, granularity, date_start, date_end, limit)
         end)
       end)
@@ -1052,43 +1007,6 @@ defmodule SaturationTest do
 
   # Pre-generate and cache 512 Phoenix/HTTP queries at compile time
   @cached_phoenix_queries (
-    limit_values = [
-      1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000,
-      11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000,
-      21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000,
-      31000, 32000, 33000, 34000, 35000, 36000, 37000, 38000, 39000, 40000,
-      41000, 42000, 43000, 44000, 45000, 46000, 47000, 48000, 49000, 50000
-    ]
-
-    date_ranges = (
-      years = for year <- 2016..2025, do: {"#{year}", "#{year}-01-01", "#{year}-12-31"}
-      halves = for year <- 2016..2025, half <- ["H1", "H2"] do
-        case half do
-          "H1" -> {"#{year}-H1", "#{year}-01-01", "#{year}-06-30"}
-          "H2" -> {"#{year}-H2", "#{year}-07-01", "#{year}-12-31"}
-        end
-      end
-      quarters = for year <- 2016..2025, q <- 1..4 do
-        {sm, em, ed} = case q do
-          1 -> {"01", "03", "31"}
-          2 -> {"04", "06", "30"}
-          3 -> {"07", "09", "30"}
-          4 -> {"10", "12", "31"}
-        end
-        {"#{year}-Q#{q}", "#{year}-#{sm}-01", "#{year}-#{em}-#{ed}"}
-      end
-      rolling = [
-        {"Last1Y", "2024-01-01", "2025-12-31"},
-        {"Last2Y", "2023-01-01", "2025-12-31"},
-        {"Last3Y", "2022-01-01", "2025-12-31"},
-        {"Last5Y", "2020-01-01", "2025-12-31"},
-        {"AllTime", "2016-01-01", "2025-12-31"}
-      ]
-      years ++ halves ++ quarters ++ rolling
-    )
-
-    granularities = ~w(year quarter month week day hour)
-
     # Phoenix template generator
     build_phoenix = fn template_id, granularity, date_start, date_end, limit ->
       time_dim = %{"dimension" => "mandata_captate.updated_at", "granularity" => granularity, "dateRange" => [date_start, date_end]}
@@ -1106,16 +1024,16 @@ defmodule SaturationTest do
     end
 
     # Generate all queries
-    date_ranges
+    @date_ranges
     |> Enum.with_index()
     |> Enum.flat_map(fn {{_label, date_start, date_end}, date_idx} ->
-      granularities
+      @granularities
       |> Enum.with_index()
       |> Enum.flat_map(fn {granularity, gran_idx} ->
         1..8
         |> Enum.map(fn template_id ->
           query_idx = date_idx * 48 + gran_idx * 8 + template_id - 1
-          limit = Enum.at(limit_values, rem(query_idx, length(limit_values)))
+          limit = Enum.at(@limit_values, rem(query_idx, length(@limit_values)))
           build_phoenix.(template_id, granularity, date_start, date_end, limit)
         end)
       end)
@@ -1154,11 +1072,7 @@ defmodule SaturationTest do
   # HTTP Implementation
   # ===========================================================================
 
-  defp run_http_saturation(client, count, label, opts \\ []) do
-    run_http_saturation_with_query(client, count, label, cube_query_http(), opts)
-  end
-
-  defp run_http_saturation_with_query(client, count, label, query, opts \\ []) do
+  defp run_http_saturation_with_query(client, count, label, query, opts) do
     quiet = Keyword.get(opts, :quiet, false)
 
     unless quiet do
@@ -1256,11 +1170,7 @@ defmodule SaturationTest do
   # ADBC Implementation
   # ===========================================================================
 
-  defp run_adbc_saturation(count, label, opts \\ []) do
-    run_adbc_saturation_with_query(count, label, cube_query_sql(), opts)
-  end
-
-  defp run_adbc_saturation_with_query(count, label, query, opts \\ []) do
+  defp run_adbc_saturation_with_query(count, label, query, opts) do
     quiet = Keyword.get(opts, :quiet, false)
     pool_size = Adbc.CubePool.get_pool_size()
 
@@ -1351,67 +1261,6 @@ defmodule SaturationTest do
   # ===========================================================================
   # Phoenix Endpoint Implementation
   # ===========================================================================
-
-  defp run_phoenix_saturation(count, label, opts \\ []) do
-    quiet = Keyword.get(opts, :quiet, false)
-
-    unless quiet do
-      IO.puts("\n" <> String.duplicate("=", 60))
-      IO.puts("#{label}: #{count} Concurrent Queries (Phoenix/ADBC)")
-      IO.puts(String.duplicate("=", 60))
-    end
-
-    # Ensure inets is started for httpc
-    :inets.start()
-
-    start_time = System.monotonic_time(:millisecond)
-
-    tasks =
-      for _ <- 1..count do
-        Task.async(fn ->
-          query_start = System.monotonic_time(:millisecond)
-
-          body = Jason.encode!(%{"query" => phoenix_query()})
-
-          result =
-            try do
-              case :httpc.request(
-                     :post,
-                     {~c"#{@phoenix_url}", [], ~c"application/json", body},
-                     [timeout: 120_000],
-                     []
-                   ) do
-                {:ok, {{_, 200, _}, _, _response_body}} ->
-                  :ok
-
-                {:ok, {{_, status, _}, _, response_body}} ->
-                  {:error, "HTTP #{status}: #{String.slice(to_string(response_body), 0, 100)}"}
-
-                {:error, reason} ->
-                  {:error, inspect(reason)}
-              end
-            rescue
-              e -> {:error, Exception.message(e)}
-            end
-
-          query_end = System.monotonic_time(:millisecond)
-          latency = query_end - query_start
-
-          case result do
-            :ok -> {:ok, latency}
-            {:error, msg} -> {:error, msg, latency}
-          end
-        end)
-      end
-
-    results = Task.await_many(tasks, 180_000)
-    end_time = System.monotonic_time(:millisecond)
-    total_duration = end_time - start_time
-
-    metrics = calculate_metrics(results, total_duration, count)
-    unless quiet, do: print_metrics(metrics, label)
-    metrics
-  end
 
   defp run_phoenix_saturation_with_queries(count, label, queries, opts \\ []) do
     quiet = Keyword.get(opts, :quiet, false)
@@ -1632,49 +1481,6 @@ defmodule SaturationTest do
       - Columnar JSON response format
       - Connection pooling via ADBC
       - Sub-second latency at scale
-      ============================================================
-    """)
-  end
-
-  defp print_comparison(http_metrics, adbc_metrics) do
-    IO.puts("""
-
-    +----------------------+----------------+----------------+
-    | Metric               | HTTP           | ADBC           |
-    +----------------------+----------------+----------------+
-    | Success Rate         | #{pad(http_metrics.success_rate, "%")} | #{pad(adbc_metrics.success_rate, "%")} |
-    | Throughput (qps)     | #{pad(http_metrics.throughput, "")} | #{pad(adbc_metrics.throughput, "")} |
-    | Avg Latency (ms)     | #{pad(http_metrics.avg_latency, "")} | #{pad(adbc_metrics.avg_latency, "")} |
-    | P50 Latency (ms)     | #{pad(http_metrics.p50, "")} | #{pad(adbc_metrics.p50, "")} |
-    | P95 Latency (ms)     | #{pad(http_metrics.p95, "")} | #{pad(adbc_metrics.p95, "")} |
-    | P99 Latency (ms)     | #{pad(http_metrics.p99, "")} | #{pad(adbc_metrics.p99, "")} |
-    +----------------------+----------------+----------------+
-    """)
-
-    # Calculate and highlight ADBC throughput advantage
-    throughput_speedup =
-      if http_metrics.throughput > 0 do
-        adbc_metrics.throughput / http_metrics.throughput
-      else
-        0
-      end
-
-    latency_speedup =
-      if adbc_metrics.avg_latency > 0 do
-        http_metrics.avg_latency / adbc_metrics.avg_latency
-      else
-        0
-      end
-
-    IO.puts("""
-      ============================================================
-      ADBC THROUGHPUT ADVANTAGE
-      ============================================================
-      Throughput Speedup:  #{round_num(throughput_speedup)}x faster queries per second
-      Latency Reduction:   #{round_num(latency_speedup)}x lower response time
-
-      KEY INSIGHT: ADBC delivers #{round_num(throughput_speedup)}x more queries
-      per second than HTTP, enabling real-time analytics at scale.
       ============================================================
     """)
   end

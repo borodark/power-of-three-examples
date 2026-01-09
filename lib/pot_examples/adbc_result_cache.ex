@@ -42,7 +42,7 @@ defmodule ExamplesOfPoT.AdbcResultCache do
 
   @impl true
   def init(opts) do
-    enabled = Keyword.get(opts, :enabled, true)
+    enabled = Keyword.get(opts, :enabled, false)
     ttl_ms = Keyword.get(opts, :ttl_ms, 60_000)
     cleanup_interval_ms = Keyword.get(opts, :cleanup_interval_ms, 30_000)
 

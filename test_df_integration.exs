@@ -63,17 +63,13 @@ IO.puts("✓ SQL query built correctly")
 # Test 4: Connect to Cube and execute query
 IO.puts("\nTest 4: Connecting to Cube services...")
 
-# Find the Cube driver
-driver_path = Path.expand("_build/dev/lib/adbc/priv/lib/libadbc_driver_cube.so", __DIR__)
-
 conn_opts = [
   host: "localhost",
-  port: 4445,
+  port: 8120,
   token: "test",
-  driver_path: driver_path
+  driver: :cube,
+  driver_version: "0.1.2"
 ]
-
-IO.puts("Using driver: #{driver_path}")
 
 case PowerOfThree.CubeConnection.connect(conn_opts) do
   {:ok, conn} ->

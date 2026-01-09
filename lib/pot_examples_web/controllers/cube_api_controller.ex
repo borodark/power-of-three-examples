@@ -181,18 +181,24 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
   end
 
   defp execute_cube_query(query) do
-    measures = query["measures"] || query[:measures] || []
-    dimensions = query["dimensions"] || query[:dimensions] || []
-    filters = query["filters"] || query[:filters] || []
-    time_dimensions = query["timeDimensions"] || query[:timeDimensions] || []
-    limit = query["limit"] || query[:limit]
-    offset = query["offset"] || query[:offset]
+    try do
+      measures = query["measures"] || query[:measures] || []
+      dimensions = query["dimensions"] || query[:dimensions] || []
+      filters = query["filters"] || query[:filters] || []
+      time_dimensions = query["timeDimensions"] || query[:timeDimensions] || []
+      limit = query["limit"] || query[:limit]
+      offset = query["offset"] || query[:offset]
 
-    # Build Cube SQL with MEASURE() syntax for ADBC
-    sql = build_cube_sql(measures, dimensions, filters, time_dimensions, limit, offset)
-    Logger.debug("Generated Cube SQL: #{sql}")
+      # Build Cube SQL with MEASURE() syntax for ADBC
+      sql = build_cube_sql(measures, dimensions, filters, time_dimensions, limit, offset)
+      Logger.debug("Generated Cube SQL: #{sql}")
 
-    execute_adbc(sql)
+      execute_adbc(sql)
+    rescue
+      e ->
+        Logger.error("Query build failed: #{Exception.message(e)}")
+        {:error, "Query build failed: #{Exception.message(e)}"}
+    end
   end
 
   # Build Cube SQL with MEASURE() syntax
@@ -226,8 +232,8 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
     # Build FROM clause
     from_clause = "FROM #{cube_name}"
 
-    # Build WHERE clause from filters
-    where_clause = build_where_clause(filters)
+    # Build WHERE clause from filters and time dimensions
+    where_clause = build_where_clause(filters, time_dimensions)
 
     # Build GROUP BY clause
     group_by_clause =
@@ -256,18 +262,23 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
 
   defp extract_cube_name(_), do: raise("No measures or dimensions provided")
 
-  defp build_where_clause([]), do: nil
-
-  defp build_where_clause(filters) do
+  defp build_where_clause(filters, time_dimensions) do
     conditions =
       filters
       |> Enum.map(&filter_to_sql/1)
       |> Enum.reject(&is_nil/1)
 
-    if Enum.empty?(conditions) do
+    time_conditions =
+      time_dimensions
+      |> Enum.flat_map(&time_dimension_to_sql/1)
+      |> Enum.reject(&is_nil/1)
+
+    all_conditions = conditions ++ time_conditions
+
+    if Enum.empty?(all_conditions) do
       nil
     else
-      "WHERE #{Enum.join(conditions, " AND ")}"
+      "WHERE #{Enum.join(all_conditions, " AND ")}"
     end
   end
 
@@ -303,6 +314,13 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
 
   defp filter_to_sql(_), do: nil
 
+  defp time_dimension_to_sql(%{"dimension" => dim, "dateRange" => [start_date, end_date]})
+       when is_binary(dim) do
+    ["#{dim} >= '#{start_date}' AND #{dim} <= '#{end_date}'"]
+  end
+
+  defp time_dimension_to_sql(_), do: []
+
   # Execute query via ADBC - native Arrow columnar results
   defp execute_adbc(sql) do
     case AdbcResultCache.get(sql) do
@@ -310,19 +328,24 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
         {:ok, cached}
 
       :miss ->
-        conn = Adbc.CubePool.get_connection()
+        case Adbc.CubePool.get_connection() do
+          nil ->
+            Logger.error("ADBC connection pool is not available")
+            {:error, "ADBC connection pool is not available"}
 
-        case Adbc.Connection.query(conn, sql) do
-          {:ok, result} ->
-            # Materialize and convert to columnar map
-            materialized = Result.materialize(result)
-            columnar_data = Result.to_map(materialized)
-            :ok = AdbcResultCache.put(sql, columnar_data)
-            {:ok, columnar_data}
+          conn ->
+            case Adbc.Connection.query(conn, sql) do
+              {:ok, result} ->
+                # Materialize and convert to columnar map
+                materialized = Result.materialize(result)
+                columnar_data = Result.to_map(materialized)
+                :ok = AdbcResultCache.put(sql, columnar_data)
+                {:ok, columnar_data}
 
-          {:error, reason} ->
-            Logger.error("ADBC query failed: #{inspect(reason)}")
-            {:error, "Query execution failed: #{inspect(reason)}"}
+              {:error, reason} ->
+                Logger.error("ADBC query failed: #{inspect(reason)}")
+                {:error, "Query execution failed: #{inspect(reason)}"}
+            end
         end
     end
   end

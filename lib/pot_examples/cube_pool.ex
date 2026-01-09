@@ -18,22 +18,24 @@ defmodule ExamplesOfPoT.CubePool do
     cube_config = Keyword.get(opts, :cube_config, [])
 
     # Extract Cube configuration
-    driver_path = Keyword.fetch!(cube_config, :driver_path)
+    driver = Keyword.get(cube_config, :driver, :cube)
+    driver_version = Keyword.get(cube_config, :driver_version)
     host = Keyword.get(cube_config, :host, "localhost")
-    port = Keyword.get(cube_config, :port, 4445)
+    port = Keyword.get(cube_config, :port, 8120)
     token = Keyword.get(cube_config, :token, "test")
+    driver_opts = if driver_version, do: [version: driver_version], else: []
 
     # Database supervisor - single shared database instance
     database_spec = {
       Adbc.Database,
       [
-        driver: driver_path,
+        driver: driver,
         "adbc.cube.host": host,
         "adbc.cube.port": Integer.to_string(port),
         "adbc.cube.connection_mode": "native",
         "adbc.cube.token": token,
         process_options: [name: ExamplesOfPoT.CubeDB]
-      ]
+      ] ++ driver_opts
     }
 
     # Connection pool - multiple connection processes

@@ -194,11 +194,11 @@ defmodule GenerateData do
       total_amount: Faker.random_between(0, 5599),
       customer_id: customer_id,
       inserted_at:
-        Faker.DateTime.backward(Faker.random_between(365, 3650))
+        Faker.DateTime.backward(Faker.random_between(0, 3650))
         |> DateTime.to_naive()
         |> NaiveDateTime.truncate(:second),
       updated_at:
-        Faker.DateTime.backward(Faker.random_between(365, 3650))
+        Faker.DateTime.backward(Faker.random_between(0, 3650))
         |> DateTime.to_naive()
         |> NaiveDateTime.truncate(:second)
     }

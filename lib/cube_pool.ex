@@ -18,18 +18,21 @@ defmodule Adbc.CubePool do
     host = Keyword.fetch!(opts, :host)
     port = Keyword.fetch!(opts, :port)
     token = Keyword.fetch!(opts, :token)
+    driver = Keyword.get(opts, :driver, :cube)
+    driver_version = Keyword.get(opts, :driver_version)
+    driver_opts = if driver_version, do: [version: driver_version], else: []
 
     # Database supervisor - single shared database instance
     database_spec = {
       Adbc.Database,
       [
-        driver: Path.join(:code.priv_dir(:adbc), "lib/libadbc_driver_cube.so"),
+        driver: driver,
         "adbc.cube.host": host,
         "adbc.cube.port": Integer.to_string(port),
         "adbc.cube.connection_mode": "native",
         "adbc.cube.token": token,
         process_options: [name: Adbc.Cube]
-      ]
+      ] ++ driver_opts
     }
 
     # Connection pool - multiple connection processes
