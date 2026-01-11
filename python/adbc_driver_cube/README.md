@@ -201,7 +201,7 @@ with db.cursor() as cur:
 The Python package requires the C driver library. Build it with:
 
 ```bash
-cd /home/io/projects/learn_erl/adbc
+cd path/to/adbc
 mkdir -p cmake_adbc && cd cmake_adbc
 cmake ../3rd_party/apache-arrow-adbc/c -DADBC_DRIVER_CUBE=ON
 make adbc_driver_cube_shared

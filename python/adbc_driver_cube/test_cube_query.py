@@ -2,7 +2,7 @@
 """Test real Cube query with dimensions and measures"""
 
 import sys
-sys.path.insert(0, "/home/io/projects/learn_erl/adbc/python/adbc_driver_cube")
+sys.path.insert(0, "path/to/adbc/python/adbc_driver_cube")
 
 import adbc_driver_cube as cube
 

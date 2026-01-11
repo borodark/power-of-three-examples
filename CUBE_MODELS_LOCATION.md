@@ -6,7 +6,7 @@
 
 Cube models have been moved to the live Cube API server location for integration with Arrow IPC testing:
 
-**Location:** `~/projects/learn_erl/cube/examples/recipes/arrow-ipc/model/cubes/`
+**Location:** `path/to/cube/examples/recipes/arrow-ipc/model/cubes/`
 
 ## Cube Models
 
@@ -59,7 +59,7 @@ The Cube API server watches the `model/cubes/` directory and automatically reloa
 ADBC integration tests can now access power-of-three cubes:
 
 ```bash
-cd ~/projects/learn_erl/adbc
+cd path/to/adbc
 mix test test/adbc_cube_basic_test.exs --include cube
 ```
 
@@ -67,8 +67,8 @@ mix test test/adbc_cube_basic_test.exs --include cube
 
 - **`test_arrow_cache_performance.py`** - Uses Arrow Native protocol (port 4445)
 
-For Arrow Native examples, see `~/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`.
+For Arrow Native examples, see `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`.
 
 ## Documentation
 
-See `~/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_INTEGRATION.md` for complete integration details.
+See `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_INTEGRATION.md` for complete integration details.

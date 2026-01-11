@@ -1,8 +1,9 @@
 defmodule Adbc.CubeBasicTest do
   use ExUnit.Case, async: true
 
-  alias Adbc.{Connection, Result, Column}
+  alias Adbc.{Result, Column}
   alias Explorer.DataFrame
+  alias PowerOfThree.CubeConnectionPool
 
   @moduletag :cube
   @moduletag timeout: 30_000
@@ -14,7 +15,7 @@ defmodule Adbc.CubeBasicTest do
   setup_all do
     # Ensure the Cube driver is available
     driver_version =
-      Application.get_env(:pot_examples, Adbc.CubePool, [])
+      Application.get_env(:power_of_3, PowerOfThree.CubeConnectionPool, [])
       |> Keyword.get(:driver_version)
 
     driver_opts = if driver_version, do: [version: driver_version], else: []
@@ -49,16 +50,9 @@ defmodule Adbc.CubeBasicTest do
     :ok
   end
 
-  setup do
-    # Get a connection from the pool for this test
-    %{conn: Adbc.CubePool.get_connection()}
-  end
-
   describe "basic connectivity" do
-    test "runs simple SELECT 1 query", %{conn: conn} do
-      assert {:ok, results} = Connection.query(conn, "SELECT 1 as test")
-
-      materialized = Result.materialize(results)
+    test "runs simple SELECT 1 query" do
+      assert {:ok, materialized} = CubeConnectionPool.query("SELECT 1 as test")
 
       assert %Result{
                data: [
@@ -72,10 +66,8 @@ defmodule Adbc.CubeBasicTest do
              } = materialized
     end
 
-    test "runs SELECT with different integer values", %{conn: conn} do
-      assert {:ok, results} = Connection.query(conn, "SELECT 42 as answer")
-
-      materialized = Result.materialize(results)
+    test "runs SELECT with different integer values" do
+      assert {:ok, materialized} = CubeConnectionPool.query("SELECT 42 as answer")
 
       assert %Result{
                data: [
@@ -90,10 +82,8 @@ defmodule Adbc.CubeBasicTest do
   end
 
   describe "data types" do
-    test "handles STRING type", %{conn: conn} do
-      assert {:ok, results} = Connection.query(conn, "SELECT 'hello world' as greeting")
-
-      materialized = Result.materialize(results)
+    test "handles STRING type" do
+      assert {:ok, materialized} = CubeConnectionPool.query("SELECT 'hello world' as greeting")
 
       assert %Result{
                data: [
@@ -106,10 +96,8 @@ defmodule Adbc.CubeBasicTest do
              } = materialized
     end
 
-    test "handles DOUBLE/FLOAT type", %{conn: conn} do
-      assert {:ok, results} = Connection.query(conn, "SELECT 3.14159 as pi")
-
-      materialized = Result.materialize(results)
+    test "handles DOUBLE/FLOAT type" do
+      assert {:ok, materialized} = CubeConnectionPool.query("SELECT 3.14159 as pi")
 
       assert %Result{
                data: [
@@ -127,10 +115,8 @@ defmodule Adbc.CubeBasicTest do
       assert_in_delta pi_value, 3.14159, 0.00001
     end
 
-    test "handles BOOLEAN type", %{conn: conn} do
-      assert {:ok, results} = Connection.query(conn, "SELECT true as flag")
-
-      materialized = Result.materialize(results)
+    test "handles BOOLEAN type" do
+      assert {:ok, materialized} = CubeConnectionPool.query("SELECT true as flag")
 
       assert %Result{
                data: [
@@ -145,7 +131,7 @@ defmodule Adbc.CubeBasicTest do
   end
 
   describe "Cube queries" do
-    test "queries Cube dimension", %{conn: conn} do
+    test "queries Cube dimension" do
       queries = [
         """
         SELECT
@@ -201,12 +187,11 @@ defmodule Adbc.CubeBasicTest do
       ]
 
       for query <- queries do
-        assert {:ok, results} = Connection.query(conn, query)
-        m_zd = Result.materialize(results)
-        [col1 | _] = m_zd.data
+        assert {:ok, results} = CubeConnectionPool.query(query)
+        [col1 | _] = results.data
         IO.inspect(col1.data)
         IO.inspect(Enum.count(col1.data))
-        df = DataFrame.from_query!(conn, query, [])
+        df = CubeConnectionPool.transaction(fn conn -> DataFrame.from_query!(conn, query, []) end)
         IO.inspect(df)
       end
     end
@@ -214,17 +199,24 @@ defmodule Adbc.CubeBasicTest do
 
   describe "connection pool" do
     test "pool provides multiple connections" do
-      pool_size = Adbc.CubePool.get_pool_size()
-      assert pool_size == 44
+      pool_config = Application.get_env(:power_of_3, PowerOfThree.CubeConnectionPool, [])
+      expected_size = Keyword.get(pool_config, :size, System.schedulers_online() * 2)
+      {_state, workers, _overflow, _busy, _waiting} = CubeConnectionPool.status()
+      assert workers == expected_size
     end
 
     test "can get specific connection from pool" do
-      conn1 = Adbc.CubePool.get_connection(1)
-      conn2 = Adbc.CubePool.get_connection(2)
+      {worker1, conn1} = CubeConnectionPool.checkout()
+      {worker2, conn2} = CubeConnectionPool.checkout()
 
+      assert is_pid(worker1)
+      assert is_pid(worker2)
       assert is_pid(conn1)
       assert is_pid(conn2)
       assert conn1 != conn2
+
+      CubeConnectionPool.checkin(worker1)
+      CubeConnectionPool.checkin(worker2)
     end
 
     test "concurrent queries work with pool" do
@@ -232,8 +224,7 @@ defmodule Adbc.CubeBasicTest do
       tasks =
         for i <- 1..10 do
           Task.async(fn ->
-            conn = Adbc.CubePool.get_connection()
-            Connection.query(conn, "SELECT #{i} as num")
+            CubeConnectionPool.query("SELECT #{i} as num")
           end)
         end
 
@@ -248,10 +239,7 @@ defmodule Adbc.CubeBasicTest do
       # Extract values
       values =
         results
-        |> Enum.map(fn {:ok, result} ->
-          %Result{data: [%Column{data: [value]}]} = Result.materialize(result)
-          value
-        end)
+        |> Enum.map(fn {:ok, %Result{data: [%Column{data: [value]}]}} -> value end)
         |> Enum.sort()
 
       # Should get all values 1..10

@@ -18,7 +18,8 @@ defmodule ExamplesOfPoT.Application do
       # Get Cube pool configuration
       {ExamplesOfPoT.AdbcResultCache,
        Application.get_env(:pot_examples, ExamplesOfPoT.AdbcResultCache, [])},
-      {Adbc.CubePool, Application.get_env(:pot_examples, Adbc.CubePool, [])},
+      {PowerOfThree.CubeConnectionPool,
+       Application.get_env(:power_of_3, PowerOfThree.CubeConnectionPool, [])},
 
       # Start to serve requests, typically the last entry
       ExamplesOfPoTWeb.Endpoint

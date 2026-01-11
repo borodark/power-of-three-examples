@@ -64,7 +64,7 @@ mix test test/cube_saturation_test.exs --include saturation
 
 **Terminal 1: Cube.js API**
 ```bash
-cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
+cd path/to/cube/examples/recipes/arrow-ipc
 ./start-cube-api.sh
 ```
 
@@ -75,10 +75,10 @@ cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
 
 ### 2. Verify Connection Pool
 
-The saturation tests use the `ExamplesOfPoT.CubePool` with default configuration:
-- Pool size: 10 connections (from config)
+The saturation tests use `PowerOfThree.CubeConnectionPool` with default configuration:
+- Pool size: `size` from config
 - Host: localhost
-- Port: 4445
+- Port: 8120
 
 ### 3. Ensure System Resources
 
@@ -170,9 +170,11 @@ Possible causes:
 
 ```elixir
 # config/config.exs
-config :pot_examples, ExamplesOfPoT.CubePool,
-  pool_size: 20,  # Increase for higher concurrency
-  cube_config: [...]
+config :power_of_3, PowerOfThree.CubeConnectionPool,
+  size: 20,  # Increase for higher concurrency
+  host: "localhost",
+  port: 8120,
+  token: "test"
 ```
 
 ### 2. Monitor cubesqld
@@ -182,7 +184,7 @@ config :pot_examples, ExamplesOfPoT.CubePool,
 tail -f /path/to/cubesqld.log
 
 # Monitor connections
-lsof -i :4445 | wc -l
+lsof -i :8120 | wc -l
 ```
 
 ### 3. Database Optimization
@@ -313,7 +315,7 @@ mix test test/cube_saturation_test.exs --include progressive
 
 **Error**: `{:error, :econnrefused}`
 
-**Solution**: Ensure cubesqld is running on port 4445
+**Solution**: Ensure cubesqld is running on port 8120
 
 ### Out of Memory
 
@@ -364,7 +366,8 @@ latencies = run_detailed_saturation(1000)
 # Monitor pool during test
 Task.async(fn ->
   for _ <- 1..30 do
-    pool_size = ExamplesOfPoT.CubePool.get_pool_size()
+    {_state, pool_size, _overflow, _busy, _waiting} =
+      PowerOfThree.CubeConnectionPool.status()
     IO.puts("Pool size: #{pool_size}")
     Process.sleep(1000)
   end
@@ -396,8 +399,8 @@ end
 ## Related Documentation
 
 - **Connection Pool Setup**: `CUBE_POOL_SETUP.md`
-- **ADBC Testing**: `~/projects/learn_erl/adbc/CUBE_TESTING_STATUS.md`
-- **Architecture**: `~/projects/learn_erl/adbc/ARCHITECTURE.md`
+- **ADBC Testing**: `path/to/adbc/CUBE_TESTING_STATUS.md`
+- **Architecture**: `path/to/adbc/ARCHITECTURE.md`
 
 ## Summary
 

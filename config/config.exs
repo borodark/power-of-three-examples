@@ -34,16 +34,13 @@ config :pot_examples, Postgres.Repo,
   pool_size: System.schedulers_online() * 2
 
 
-# Cube ADBC connection pool configuration
-config :pot_examples, Adbc.CubePool,
-  pool_size: System.schedulers_online() * 2,
+# Cube ADBC connection pool configuration (PowerOfThree poolboy wrapper)
+config :power_of_3, PowerOfThree.CubeConnectionPool,
+  size: System.schedulers_online() * 2,
+  max_overflow: 2,
   host: "localhost",
   port: 8120,
-  token: "test",
-  driver: :cube,
-  driver_version: "0.1.2",
-  username: "username",
-  password: "password"
+  token: "test"
 
 # Configures the endpoint
 config :pot_examples, ExamplesOfPoTWeb.Endpoint,

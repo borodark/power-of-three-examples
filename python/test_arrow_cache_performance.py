@@ -5,7 +5,7 @@ Arrow IPC Query Cache Performance Tests
 Tests Arrow Native protocol performance with optional result caching.
 
 NOTE: This test uses Arrow Native protocol (port 4445), not PostgreSQL wire protocol.
-See ~/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md
+See path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md
 for Arrow Native examples.
 
 Requirements:

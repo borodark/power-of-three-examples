@@ -27,9 +27,9 @@ __version__ = "0.1.0"
 # Default library paths to search
 _DEFAULT_LIBRARY_PATHS = [
     # Installed location (priv directory)
-    "/home/io/projects/learn_erl/adbc/priv/lib/libadbc_driver_cube.so",
+    "path/to/adbc/priv/lib/libadbc_driver_cube.so",
     # Build output (_build directory)
-    "/home/io/projects/learn_erl/adbc/_build/cmake/adbc/driver/cube/libadbc_driver_cube.so",
+    "path/to/adbc/_build/cmake/adbc/driver/cube/libadbc_driver_cube.so",
     # System installed locations
     "/usr/local/lib/libadbc_driver_cube.so",
     "/usr/lib/libadbc_driver_cube.so",

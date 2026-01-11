@@ -79,7 +79,7 @@ defmodule SaturationTest do
         Cube HTTP API is not running on localhost: @cube_http_port
 
         Start with:
-          cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
+          cd path/to/cube/examples/recipes/arrow-ipc
           CUBEJS_DB_QUERY_TIMEOUT=45m ./start-cube-api.sh
         """
     end
@@ -94,7 +94,7 @@ defmodule SaturationTest do
         Cube ADBC server (cubesqld) is not running on localhost:#{@cube_adbc_port}.
 
         Start with:
-          cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
+          cd path/to/cube/examples/recipes/arrow-ipc
           ./start-cubesqld.sh
         """
     end
@@ -543,17 +543,13 @@ defmodule SaturationTest do
   end
 
   defp execute_timed_query(:adbc, _client) do
-    conn = Adbc.CubePool.get_connection()
     query = get_random_mandata_query_sql()
     query_start = System.monotonic_time(:millisecond)
 
     result = try do
-      case Connection.query(conn, query) do
-        {:ok, res} ->
-          _materialized = Result.materialize(res)
-          :ok
-        {:error, e} ->
-          {:error, Exception.message(e)}
+      case PowerOfThree.CubeConnectionPool.query(query) do
+        {:ok, _res} -> :ok
+        {:error, e} -> {:error, Exception.message(e)}
       end
     rescue
       e -> {:error, Exception.message(e)}
@@ -1172,7 +1168,7 @@ defmodule SaturationTest do
 
   defp run_adbc_saturation_with_query(count, label, query, opts) do
     quiet = Keyword.get(opts, :quiet, false)
-    pool_size = Adbc.CubePool.get_pool_size()
+    {_state, pool_size, _overflow, _busy, _waiting} = PowerOfThree.CubeConnectionPool.status()
 
     unless quiet do
       IO.puts("\n" <> String.duplicate("=", 60))
@@ -1185,17 +1181,15 @@ defmodule SaturationTest do
     tasks =
       for _ <- 1..count do
         Task.async(fn ->
-          conn = Adbc.CubePool.get_connection()
           query_start = System.monotonic_time(:millisecond)
 
-          result = Connection.query(conn, query)
+          result = PowerOfThree.CubeConnectionPool.query(query)
 
           query_end = System.monotonic_time(:millisecond)
           latency = query_end - query_start
 
           case result do
-            {:ok, res} ->
-              _materialized = Result.materialize(res)
+            {:ok, _res} ->
               {:ok, latency}
 
             {:error, e} ->
@@ -1215,7 +1209,7 @@ defmodule SaturationTest do
 
   defp run_adbc_saturation_with_queries(count, label, queries, opts \\ []) do
     quiet = Keyword.get(opts, :quiet, false)
-    pool_size = Adbc.CubePool.get_pool_size()
+    {_state, pool_size, _overflow, _busy, _waiting} = PowerOfThree.CubeConnectionPool.status()
     query_count = length(queries)
 
     unless quiet do
@@ -1230,17 +1224,15 @@ defmodule SaturationTest do
       for idx <- 1..count do
         Task.async(fn ->
           query = Enum.at(queries, rem(idx - 1, query_count))
-          conn = Adbc.CubePool.get_connection()
           query_start = System.monotonic_time(:millisecond)
 
-          result = Connection.query(conn, query)
+          result = PowerOfThree.CubeConnectionPool.query(query)
 
           query_end = System.monotonic_time(:millisecond)
           latency = query_end - query_start
 
           case result do
-            {:ok, res} ->
-              _materialized = Result.materialize(res)
+            {:ok, _res} ->
               {:ok, latency}
 
             {:error, e} ->

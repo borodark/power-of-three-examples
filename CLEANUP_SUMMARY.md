@@ -119,13 +119,13 @@ grep "4445\|arrow_native_client" python/test_arrow_cache_performance.py
 ### For Arrow Native Testing
 Use ADBC Elixir tests:
 ```bash
-cd ~/projects/learn_erl/adbc
+cd path/to/adbc
 mix test test/adbc_cube_basic_test.exs --include cube
 ```
 
 ### For Python Performance Testing
 ```bash
-cd ~/projects/learn_erl/power-of-three-examples/python
+cd path/to/power-of-three-examples/python
 python3 test_arrow_cache_performance.py
 ```
 
@@ -134,12 +134,12 @@ python3 test_arrow_cache_performance.py
 ## Documentation Hierarchy
 
 ### Primary (Production Guidance)
-1. `/home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
+1. `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
    - **Authoritative source** for correct query patterns
    - Shows MEASURE syntax examples
    - Explains Arrow Native protocol
 
-2. `/home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_INTEGRATION.md`
+2. `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_INTEGRATION.md`
    - Integration architecture and status
 
 ### Secondary (Package Documentation)

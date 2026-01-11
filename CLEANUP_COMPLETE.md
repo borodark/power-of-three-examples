@@ -88,7 +88,7 @@ def __init__(self, arrow_host: str = "localhost", arrow_port: int = 4445):
 > This document contains outdated information about primary keys being required.
 > **Primary keys are OPTIONAL in Cube** - use MEASURE syntax with GROUP BY instead.
 >
-> See `/home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
+> See `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
 > for correct query patterns.
 ```
 
@@ -187,19 +187,19 @@ These files were already correct and needed no cleanup:
 - ✅ `test_arrow_cache_performance.py` - Now uses Arrow Native client
 - ✅ `integration_test.py` - REMOVED (was PostgreSQL protocol only)
 
-**Note:** All Python testing now uses Arrow Native protocol. For comprehensive ADBC testing, use the Elixir test suite at `/home/io/projects/learn_erl/adbc`.
+**Note:** All Python testing now uses Arrow Native protocol. For comprehensive ADBC testing, use the Elixir test suite at `path/to/adbc`.
 
 ---
 
 ## Documentation Hierarchy
 
 ### Production Guidance (HIGH PRIORITY)
-1. `/home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
+1. `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
    - **Authoritative source for correct query patterns**
    - Shows MEASURE syntax examples
    - Explains why primary keys are optional
 
-2. `/home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_INTEGRATION.md`
+2. `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_INTEGRATION.md`
    - Integration status and architecture
    - Points to correct examples
 

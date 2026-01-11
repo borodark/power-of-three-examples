@@ -222,10 +222,10 @@ Add to crontab (`crontab -e`):
 
 ```cron
 # Daily backup at 2 AM
-0 2 * * * cd /home/io/projects/learn_erl/power-of-three-examples && ./scripts/backup_db.sh >> logs/backup.log 2>&1
+0 2 * * * cd path/to/power-of-three-examples && ./scripts/backup_db.sh >> logs/backup.log 2>&1
 
 # Weekly backup on Sunday at 3 AM
-0 3 * * 0 cd /home/io/projects/learn_erl/power-of-three-examples && ./scripts/backup_db.sh && cp backups/pot_examples_dev_*.dump backups/weekly_backup.dump
+0 3 * * 0 cd path/to/power-of-three-examples && ./scripts/backup_db.sh && cp backups/pot_examples_dev_*.dump backups/weekly_backup.dump
 ```
 
 ## Backup Verification
@@ -367,7 +367,7 @@ rclone copy backups/pot_examples_dev.dump gdrive:backups/
 
 ## Related Documentation
 
-- **ADBC Setup**: `~/projects/learn_erl/adbc/CUBE_TESTING_STATUS.md`
+- **ADBC Setup**: `path/to/adbc/CUBE_TESTING_STATUS.md`
 - **Connection Pool**: `CUBE_POOL_SETUP.md`
 - **Saturation Testing**: `SATURATION_TESTING.md`
 

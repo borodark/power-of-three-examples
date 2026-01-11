@@ -167,8 +167,8 @@ Not searching for unused variables given on the command line.
 --   CMake version: 3.28.3
 --   Generator: Unix Makefiles
 --   Build type: Release
---   Source directory: /home/io/projects/learn_erl/power-of-three-examples/deps/adbc/3rd_party/apache-arrow-adbc/c
---   Install prefix: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv
+--   Source directory: path/to/power-of-three-examples/deps/adbc/3rd_party/apache-arrow-adbc/c
+--   Install prefix: path/to/power-of-three-examples/_build/test/lib/adbc/priv
 -- 
 -- Compile and link options:
 -- 
@@ -262,67 +262,67 @@ Not searching for unused variables given on the command line.
 --       Build the test suite for DuckDB
 -- Configuring done (1.1s)
 -- Generating done (0.1s)
--- Build files have been written to: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc
-gmake[1]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[2]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+-- Build files have been written to: path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc
+gmake[1]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[2]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [  8%] Building C object vendor/nanoarrow/CMakeFiles/nanoarrow.dir/nanoarrow.c.o
 [ 16%] Building CXX object vendor/fmt/CMakeFiles/fmt.dir/src/format.cc.o
 [ 25%] Building CXX object vendor/fmt/CMakeFiles/fmt.dir/src/os.cc.o
 [ 33%] Building CXX object driver_manager/CMakeFiles/adbc_driver_manager_objlib.dir/adbc_driver_manager.cc.o
 [ 41%] Linking C static library libnanoarrow.a
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [ 41%] Built target nanoarrow
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [ 50%] Building C object driver/common/CMakeFiles/adbc_driver_common.dir/utils.c.o
 [ 58%] Linking C static library libadbc_driver_common.a
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [ 58%] Built target adbc_driver_common
 [ 66%] Linking CXX static library libfmt.a
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [ 66%] Built target fmt
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [ 75%] Building CXX object driver/framework/CMakeFiles/adbc_driver_framework.dir/objects.cc.o
 [ 83%] Building CXX object driver/framework/CMakeFiles/adbc_driver_framework.dir/utility.cc.o
 [ 91%] Linking CXX static library libadbc_driver_framework.a
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [ 91%] Built target adbc_driver_framework
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [ 91%] Built target adbc_driver_manager_objlib
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
-gmake[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [100%] Linking CXX shared library libadbc_driver_manager.so
-gmake[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 [100%] Built target adbc_driver_manager_shared
-gmake[2]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+gmake[2]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 Install the project...
 -- Install configuration: "Release"
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/include/adbc_driver_manager.h
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/include/arrow-adbc/adbc_driver_manager.h
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/libadbc_driver_manager.so.107.0.0
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/libadbc_driver_manager.so.107
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/libadbc_driver_manager.so
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerConfig.cmake
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerConfigVersion.cmake
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerTargets.cmake
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerTargets-release.cmake
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/lib/pkgconfig/adbc-driver-manager.pc
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/include/adbc.h
--- Installing: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv/include/arrow-adbc/adbc.h
-gmake[1]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/include/adbc_driver_manager.h
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/include/arrow-adbc/adbc_driver_manager.h
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/libadbc_driver_manager.so.107.0.0
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/libadbc_driver_manager.so.107
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/libadbc_driver_manager.so
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerConfig.cmake
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerConfigVersion.cmake
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerTargets.cmake
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/cmake/AdbcDriverManager/AdbcDriverManagerTargets-release.cmake
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/lib/pkgconfig/adbc-driver-manager.pc
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/include/adbc.h
+-- Installing: path/to/power-of-three-examples/_build/test/lib/adbc/priv/include/arrow-adbc/adbc.h
+gmake[1]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/adbc'
 Not searching for unused variables given on the command line.
 -- The C compiler identification is GNU 13.3.0
 -- The CXX compiler identification is GNU 13.3.0
@@ -336,39 +336,39 @@ Not searching for unused variables given on the command line.
 -- Check for working CXX compiler: /usr/bin/c++ - skipped
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
--- Using PRIV_DIR: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/priv
+-- Using PRIV_DIR: path/to/power-of-three-examples/_build/test/lib/adbc/priv
 -- FlatBuffers found in directory: /usr/lib/x86_64-linux-gnu/cmake/flatbuffers
 -- FlatBuffers config file path: /usr/lib/x86_64-linux-gnu/cmake/flatbuffers/FlatBuffersConfig.cmake
--- Using ERTS_INCLUDE_DIR: /home/io/.kerl/27-wx/erts-15.2.7.2/include
+-- Using ERTS_INCLUDE_DIR: path/to/.kerl/27-wx/erts-15.2.7.2/include
 -- CMAKE_TOOLCHAIN_FILE: not set
 -- Configuring done (0.7s)
 -- Generating done (0.0s)
--- Build files have been written to: /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif
-make[1]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
-make[2]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
-make[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
-make[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
-make[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+-- Build files have been written to: path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif
+make[1]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[2]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
 [ 20%] Building C object 3rd_party/apache-arrow-adbc/c/vendor/nanoarrow/CMakeFiles/nanoarrow.dir/nanoarrow.c.o
 [ 40%] Linking C static library libnanoarrow.a
-make[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
 [ 40%] Built target nanoarrow
-make[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
-make[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
-make[3]: Entering directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Entering directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
 [ 60%] Building CXX object CMakeFiles/adbc_nif.dir/c_src/nif_utils.cpp.o
 [ 80%] Building CXX object CMakeFiles/adbc_nif.dir/c_src/adbc_nif.cpp.o
 [100%] Linking CXX shared library adbc_nif.so
-make[3]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[3]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
 [100%] Built target adbc_nif
-make[2]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
-make[1]: Leaving directory '/home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[2]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
+make[1]: Leaving directory 'path/to/power-of-three-examples/_build/test/lib/adbc/_build/cmake/nif'
 Compiling 10 files (.ex)
 Generated adbc app
 ==> explorer
 Compiling 29 files (.ex)
 
-16:51:33.756 [debug] Copying NIF from cache and extracting to /home/io/projects/learn_erl/power-of-three-examples/_build/test/lib/explorer/priv/native/libexplorer-v0.11.1-nif-2.15-x86_64-unknown-linux-gnu.so.tar.gz
+16:51:33.756 [debug] Copying NIF from cache and extracting to path/to/power-of-three-examples/_build/test/lib/explorer/priv/native/libexplorer-v0.11.1-nif-2.15-x86_64-unknown-linux-gnu.so.tar.gz
 Generated explorer app
 ==> websock
 Compiling 1 file (.ex)

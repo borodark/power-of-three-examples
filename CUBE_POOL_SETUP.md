@@ -14,33 +14,20 @@ The application now includes a connection pool for querying Cube.js via the Arro
 │  (Supervision Tree)                         │
 │                                             │
 │  ┌────────────────────────────────────┐    │
-│  │  ExamplesOfPoT.CubePool            │    │
-│  │  (Supervisor)                      │    │
+│  │  PowerOfThree.CubeConnectionPool   │    │
+│  │  (poolboy supervisor)               │    │
 │  │                                    │    │
 │  │  ┌──────────────────────────────┐ │    │
-│  │  │  ExamplesOfPoT.CubeDB        │ │    │
-│  │  │  (Single Database Instance)  │ │    │
+│  │  │  Pool workers (N)            │ │    │
+│  │  │  (ADBC connections)          │ │    │
 │  │  └──────────────────────────────┘ │    │
-│  │                                    │    │
-│  │  ┌──────────────────────────────┐ │    │
-│  │  │  ExamplesOfPoT.CubeConn1     │ │    │
-│  │  │  (Connection Process)        │ │    │
-│  │  └──────────────────────────────┘ │    │
-│  │                                    │    │
-│  │  ┌──────────────────────────────┐ │    │
-│  │  │  ExamplesOfPoT.CubeConn2     │ │    │
-│  │  │  (Connection Process)        │ │    │
-│  │  └──────────────────────────────┘ │    │
-│  │                                    │    │
-│  │  ... (N connection processes)      │    │
-│  │                                    │    │
 │  └────────────────────────────────────┘    │
 └─────────────────────────────────────────────┘
          │
          ▼ (Arrow Native Protocol, TCP)
 ┌─────────────────────────────────────────────┐
 │  cubesqld (Rust Proxy)                      │
-│  Port 4445                                  │
+│  Port 8120                                  │
 └─────────────────────────────────────────────┘
          │
          ▼ (HTTP/REST)
@@ -52,14 +39,14 @@ The application now includes a connection pool for querying Cube.js via the Arro
 
 ## Components
 
-### 1. ExamplesOfPoT.CubePool (Supervisor)
+### 1. PowerOfThree.CubeConnectionPool (poolboy)
 
 Manages the connection pool with:
-- **Single Database instance**: Shared across all connections
-- **Multiple Connection processes**: Pool size = CPU cores × 2 (default)
-- **Round-robin distribution**: Automatic load balancing
+- **Pool workers**: One ADBC connection per worker
+- **Configurable size**: `size` and `max_overflow`
+- **poolboy scheduling**: FIFO by default
 
-**Module**: `lib/pot_examples/cube_pool.ex`
+**Module**: `deps/power_of_3/lib/power_of_three/cube_connection_pool.ex`
 
 ### 2. ExamplesOfPoT.CubeQuery (Helper Module)
 
@@ -76,23 +63,25 @@ Provides convenient query functions:
 ### config/config.exs
 
 ```elixir
-config :pot_examples, ExamplesOfPoT.CubePool,
-  pool_size: System.schedulers_online() * 2,
-  cube_config: [
-    driver_path: Path.expand("priv/lib/libadbc_driver_cube.so", ...),
-    host: "localhost",
-    port: 4445,
-    token: "test"
-  ]
+config :power_of_3, PowerOfThree.CubeConnectionPool,
+  size: System.schedulers_online() * 2,
+  max_overflow: 2,
+  host: "localhost",
+  port: 8120,
+  token: "test",
+  driver: :cube,
+  driver_version: "0.1.2"
 ```
 
 ### Options
 
-- **pool_size**: Number of connection processes (default: CPU cores × 2)
-- **driver_path**: Path to libadbc_driver_cube.so
+- **size**: Number of pooled workers (default: 5)
+- **max_overflow**: Extra workers allowed under load
 - **host**: Cube server hostname (default: "localhost")
-- **port**: Arrow Native protocol port (default: 4445)
+- **port**: Arrow Native protocol port (default: 8120)
 - **token**: Cube API authentication token
+- **driver**: Driver atom or path (default: `:cube`)
+- **driver_version**: Driver version when using atom driver
 
 ## Usage Examples
 
@@ -103,7 +92,7 @@ config :pot_examples, ExamplesOfPoT.CubePool,
 {:ok, result} = ExamplesOfPoT.CubeQuery.query("SELECT 1 as test")
 
 # Or directly
-{:ok, result} = ExamplesOfPoT.CubePool.query("SELECT 1 as test")
+{:ok, result} = PowerOfThree.CubeConnectionPool.query("SELECT 1 as test")
 ```
 
 ### Materialized Query
@@ -139,11 +128,14 @@ data = ExamplesOfPoT.CubeQuery.query!("SELECT 1 as a, 2 as b")
 ### Get Specific Connection
 
 ```elixir
-# Get a specific connection from the pool
-conn = ExamplesOfPoT.CubePool.get_connection(1)
+# Check out a connection from the pool
+{worker, conn} = PowerOfThree.CubeConnectionPool.checkout()
 
 # Use it directly
 {:ok, result} = Adbc.Connection.query(conn, "SELECT 1")
+
+# Return it to the pool
+PowerOfThree.CubeConnectionPool.checkin(worker)
 ```
 
 ### Concurrent Queries
@@ -165,7 +157,7 @@ results = Task.await_many(tasks)
 ### 1. Build the Cube Driver
 
 ```bash
-cd ~/projects/learn_erl/adbc
+cd path/to/adbc_driver_cube
 make
 ```
 
@@ -175,7 +167,7 @@ This creates `priv/lib/libadbc_driver_cube.so`.
 
 **Terminal 1: Start Cube.js API**
 ```bash
-cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
+cd path/to/cube/examples/recipes/arrow-ipc
 ./start-cube-api.sh
 ```
 
@@ -183,21 +175,21 @@ Wait for: `🚀 Cube API server is listening on 4008`
 
 **Terminal 2: Start cubesqld**
 ```bash
-cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
+cd path/to/cube/examples/recipes/arrow-ipc
 ./start-cubesqld.sh
 ```
 
 Wait for:
 ```
-🔗 Cube SQL (arrow) is listening on 0.0.0.0:4445
+🔗 Cube SQL (arrow) is listening on 0.0.0.0:8120
 ```
 
-**Note**: cubesqld also listens on port 4444 (PostgreSQL wire protocol) for legacy compatibility, but we only use the Arrow Native protocol (port 4445).
+**Note**: cubesqld also listens on port 4444 (PostgreSQL wire protocol) for legacy compatibility, but we only use the Arrow Native protocol (port 8120).
 
 ### 3. Start the Application
 
 ```bash
-cd ~/projects/learn_erl/power-of-three-examples
+cd path/to/power-of-three-examples
 mix phx.server
 ```
 
@@ -206,11 +198,11 @@ mix phx.server
 ### Run Pool Tests
 
 ```bash
-# Run all Cube pool tests
-mix test test/cube_pool_test.exs --include cube
+# Run all Cube ADBC tests
+mix test test/adbc_cube_basic_test.exs --include cube
 
 # Run specific test
-mix test test/cube_pool_test.exs:25 --include cube
+mix test test/adbc_cube_basic_test.exs:25 --include cube
 ```
 
 ### Manual Testing in IEx
@@ -220,8 +212,8 @@ mix test test/cube_pool_test.exs:25 --include cube
 iex -S mix
 
 # Check pool size
-ExamplesOfPoT.CubePool.get_pool_size()
-# => 16 (or your CPU cores × 2)
+PowerOfThree.CubeConnectionPool.status()
+# => {:ready, size, overflow, busy, waiting}
 
 # Run simple query
 ExamplesOfPoT.CubeQuery.query!("SELECT 1 as test")
@@ -247,25 +239,26 @@ data = ExamplesOfPoT.CubeQuery.query_cube!(
 ### Check Pool Health
 
 ```elixir
-# Get pool size
-ExamplesOfPoT.CubePool.get_pool_size()
+# Get pool status
+PowerOfThree.CubeConnectionPool.status()
 
 # Check if connections are alive
-for i <- 1..ExamplesOfPoT.CubePool.get_pool_size() do
-  conn = ExamplesOfPoT.CubePool.get_connection(i)
-  {i, Process.alive?(conn)}
-end
+{worker, conn} = PowerOfThree.CubeConnectionPool.checkout()
+{Process.alive?(worker), Process.alive?(conn)}
+PowerOfThree.CubeConnectionPool.checkin(worker)
 ```
 
 ### Connection Distribution
 
 ```elixir
 # Test round-robin distribution
-connections = for _ <- 1..20 do
-  ExamplesOfPoT.CubePool.get_connection()
-end
+connections =
+  for _ <- 1..5 do
+    {worker, conn} = PowerOfThree.CubeConnectionPool.checkout()
+    PowerOfThree.CubeConnectionPool.checkin(worker)
+    conn
+  end
 
-# Count unique connections used
 connections |> Enum.uniq() |> length()
 ```
 
@@ -277,7 +270,7 @@ connections |> Enum.uniq() |> length()
 
 **Solution**: Start cubesqld
 ```bash
-cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
+cd path/to/cube/examples/recipes/arrow-ipc
 ./start-cubesqld.sh
 ```
 
@@ -287,25 +280,25 @@ cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
 
 **Solution**: Build the driver
 ```bash
-cd ~/projects/learn_erl/adbc
+cd path/to/adbc_driver_cube
 make
 ```
 
 Then ensure the library is in the project's priv/lib:
 ```bash
-ls -la ~/projects/learn_erl/power-of-three-examples/priv/lib/libadbc_driver_cube.so
+ls -la path/to/power-of-three-examples/priv/lib/libadbc_driver_cube.so
 ```
 
 ### Pool Not Starting
 
 **Check**: Verify configuration
 ```elixir
-Application.get_env(:pot_examples, ExamplesOfPoT.CubePool)
+Application.get_env(:power_of_3, PowerOfThree.CubeConnectionPool)
 ```
 
 **Check**: Look at supervisor children
 ```elixir
-Supervisor.which_children(ExamplesOfPoT.CubePool)
+Supervisor.which_children(PowerOfThree.CubeConnectionPool)
 ```
 
 ### Query Failures
@@ -380,46 +373,33 @@ end
 
 ```elixir
 # config/dev.exs
-config :pot_examples, ExamplesOfPoT.CubePool,
-  pool_size: 4,  # Smaller pool for dev
-  cube_config: [
-    host: "localhost",
-    port: 4445,
-    token: "dev-token"
-  ]
+config :power_of_3, PowerOfThree.CubeConnectionPool,
+  size: 4,  # Smaller pool for dev
+  host: "localhost",
+  port: 8120,
+  token: "dev-token"
 
 # config/prod.exs
-config :pot_examples, ExamplesOfPoT.CubePool,
-  pool_size: 32,  # Larger pool for prod
-  cube_config: [
-    host: System.get_env("CUBE_HOST"),
-    port: String.to_integer(System.get_env("CUBE_PORT")),
-    token: System.get_env("CUBE_TOKEN")
-  ]
+config :power_of_3, PowerOfThree.CubeConnectionPool,
+  size: 32,  # Larger pool for prod
+  host: System.get_env("CUBE_HOST"),
+  port: String.to_integer(System.get_env("CUBE_PORT")),
+  token: System.get_env("CUBE_TOKEN")
 ```
 
 ### Multiple Cube Environments
 
 ```elixir
 # Start multiple pools for different Cube instances
-children = [
-  {ExamplesOfPoT.CubePool, [
-    name: ExamplesOfPoT.CubePool.Prod,
-    cube_config: [host: "prod-cube.example.com", ...]
-  ]},
-  {ExamplesOfPoT.CubePool, [
-    name: ExamplesOfPoT.CubePool.Staging,
-    cube_config: [host: "staging-cube.example.com", ...]
-  ]}
-]
+# (requires separate pool modules or extending the pool to accept custom names)
 ```
 
 ## Related Documentation
 
-- **ADBC Cube Driver**: `~/projects/learn_erl/adbc/CUBE_QUICKSTART.md`
-- **Architecture**: `~/projects/learn_erl/adbc/ARCHITECTURE.md`
-- **Iteration Manual**: `~/projects/learn_erl/adbc/ITERATION_MANUAL.md`
-- **Testing**: `~/projects/learn_erl/adbc/CUBE_TESTING_STATUS.md`
+- **ADBC Cube Driver**: `path/to/adbc_driver_cube/README.md`
+- **Architecture**: `path/to/adbc/ARCHITECTURE.md`
+- **Iteration Manual**: `path/to/adbc/ITERATION_MANUAL.md`
+- **Testing**: `path/to/adbc/CUBE_TESTING_STATUS.md`
 
 ## Status
 

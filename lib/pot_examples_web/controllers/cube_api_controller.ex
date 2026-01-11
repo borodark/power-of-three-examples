@@ -328,24 +328,15 @@ defmodule ExamplesOfPoTWeb.CubeApiController do
         {:ok, cached}
 
       :miss ->
-        case Adbc.CubePool.get_connection() do
-          nil ->
-            Logger.error("ADBC connection pool is not available")
-            {:error, "ADBC connection pool is not available"}
+        case PowerOfThree.CubeConnectionPool.query(sql) do
+          {:ok, result} ->
+            columnar_data = Result.to_map(result)
+            :ok = AdbcResultCache.put(sql, columnar_data)
+            {:ok, columnar_data}
 
-          conn ->
-            case Adbc.Connection.query(conn, sql) do
-              {:ok, result} ->
-                # Materialize and convert to columnar map
-                materialized = Result.materialize(result)
-                columnar_data = Result.to_map(materialized)
-                :ok = AdbcResultCache.put(sql, columnar_data)
-                {:ok, columnar_data}
-
-              {:error, reason} ->
-                Logger.error("ADBC query failed: #{inspect(reason)}")
-                {:error, "Query execution failed: #{inspect(reason)}"}
-            end
+          {:error, reason} ->
+            Logger.error("ADBC query failed: #{inspect(reason)}")
+            {:error, "Query execution failed: #{inspect(reason)}"}
         end
     end
   end

@@ -2,6 +2,7 @@ defmodule Adbc.CubeTest do
   use ExUnit.Case, async: true
 
   alias Adbc.{Connection, Result, Column}
+  alias PowerOfThree.CubeConnectionPool
 
   @moduletag :cube
   @moduletag timeout: 30_000
@@ -13,7 +14,7 @@ defmodule Adbc.CubeTest do
   setup_all do
     # Ensure the Cube driver is available
     driver_version =
-      Application.get_env(:pot_examples, Adbc.CubePool, [])
+      Application.get_env(:power_of_3, PowerOfThree.CubeConnectionPool, [])
       |> Keyword.get(:driver_version)
 
     driver_opts = if driver_version, do: [version: driver_version], else: []
@@ -41,7 +42,7 @@ defmodule Adbc.CubeTest do
         Cube server (cubesqld) is not running on #{@cube_host}:#{@cube_port}.
 
         Start it with:
-          cd ~/projects/learn_erl/cube/examples/recipes/arrow-ipc
+          cd path/to/cube/examples/recipes/arrow-ipc
           ./start-cube-api.sh    # Terminal 1
           ./start-cubesqld.sh    # Terminal 2
         """
@@ -54,7 +55,13 @@ defmodule Adbc.CubeTest do
   end
 
   setup do
-    %{conn: Adbc.CubePool.get_connection()}
+    {worker, conn} = CubeConnectionPool.checkout()
+
+    on_exit(fn ->
+      CubeConnectionPool.checkin(worker)
+    end)
+
+    %{conn: conn}
   end
 
   describe "basic queries" do
@@ -354,11 +361,14 @@ defmodule Adbc.CubeTest do
 
   describe "connection management" do
     test "can create multiple connections" do
-      conn1 = Adbc.CubePool.get_connection()
-      conn2 = Adbc.CubePool.get_connection()
+      {worker1, conn1} = CubeConnectionPool.checkout()
+      {worker2, conn2} = CubeConnectionPool.checkout()
 
       assert {:ok, _} = Connection.query(conn1, "SELECT 1")
       assert {:ok, _} = Connection.query(conn2, "SELECT 2")
+
+      CubeConnectionPool.checkin(worker1)
+      CubeConnectionPool.checkin(worker2)
     end
 
     test "connection survives multiple queries", %{conn: conn} do
@@ -375,9 +385,9 @@ defmodule Adbc.CubeTest do
     test "handles concurrent queries" do
       # Run queries concurrently
       tasks =
-        for conn <- 1..3 |> Enum.map(&Adbc.CubePool.get_connection/1) do
+        for _ <- 1..3 do
           Task.async(fn ->
-            Connection.query(conn, "SELECT of_customers.brand FROM of_customers LIMIT 10")
+            CubeConnectionPool.query("SELECT of_customers.brand FROM of_customers LIMIT 10")
           end)
         end
 

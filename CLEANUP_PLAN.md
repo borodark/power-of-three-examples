@@ -64,7 +64,7 @@ Add disclaimer to archived primary key documents:
 > This document contains outdated information about primary keys being required.
 > Primary keys are OPTIONAL in Cube - use MEASURE syntax with GROUP BY instead.
 >
-> See `/home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
+> See `path/to/cube/examples/recipes/arrow-ipc/POWER_OF_THREE_QUERY_EXAMPLES.md`
 > for correct query patterns.
 ```
 

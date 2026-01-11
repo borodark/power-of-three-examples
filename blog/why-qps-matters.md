@@ -196,8 +196,8 @@ Here's how we achieved 3,500+ QPS with Elixir and ADBC:
 ### 1. Connection Pooling
 ```elixir
 # Configure ADBC connection pool
-config :my_app, Adbc.CubePool,
-  pool_size: 44,  # Tune based on your workload
+config :power_of_3, PowerOfThree.CubeConnectionPool,
+  size: 44,  # Tune based on your workload
   host: "localhost",
   port: 8120
 ```
@@ -205,11 +205,8 @@ config :my_app, Adbc.CubePool,
 ### 2. Efficient Query Execution
 ```elixir
 def execute_query(sql) do
-  # Get connection from pool (microseconds)
-  conn = Adbc.CubePool.get_connection()
-
   # Execute query (sub-millisecond for cached)
-  {:ok, result} = Adbc.Connection.query(conn, sql)
+  {:ok, result} = PowerOfThree.CubeConnectionPool.query(sql)
 
   # Results already in Arrow format - no parsing needed
   result

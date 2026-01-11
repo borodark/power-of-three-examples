@@ -22,7 +22,7 @@ defmodule ExamplesOfPoT.CubeQuery do
       )
   """
 
-  alias ExamplesOfPoT.CubePool
+  alias PowerOfThree.CubeConnectionPool
   alias Adbc.Result
 
   @doc """
@@ -34,7 +34,7 @@ defmodule ExamplesOfPoT.CubeQuery do
       {:ok, %Adbc.Result{...}}
   """
   def query(sql, params \\ []) do
-    CubePool.query(sql, params)
+    CubeConnectionPool.query(sql, params)
   end
 
   @doc """
@@ -61,10 +61,7 @@ defmodule ExamplesOfPoT.CubeQuery do
       {:ok, %Adbc.Result{data: [%Adbc.Column{...}]}}
   """
   def query_materialized(sql, params \\ []) do
-    case query(sql, params) do
-      {:ok, result} -> {:ok, Result.materialize(result)}
-      error -> error
-    end
+    query(sql, params)
   end
 
   @doc """

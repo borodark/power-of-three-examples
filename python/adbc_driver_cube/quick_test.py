@@ -10,7 +10,7 @@ print("=" * 60)
 # Check library
 print("\n1. Checking C driver library...")
 lib_paths = [
-    "/home/io/projects/learn_erl/adbc/priv/lib/libadbc_driver_cube.so"
+    "path/to/adbc/priv/lib/libadbc_driver_cube.so"
 ]
 
 lib_found = None
@@ -38,7 +38,7 @@ if result.returncode == 0:
 else:
     print("   ❌ Port 4445 is NOT listening")
     print("   Start cubesqld with:")
-    print("   cd /home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc")
+    print("   cd path/to/cube/examples/recipes/arrow-ipc")
     print("   ./dev-start.sh")
     sys.exit(1)
 
@@ -99,6 +99,6 @@ except Exception as e:
     import traceback
     traceback.print_exc()
     print("\n⚠ Make sure cubesqld is running with Arrow Native support")
-    print("  cd /home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc")
+    print("  cd path/to/cube/examples/recipes/arrow-ipc")
     print("  ./dev-start.sh")
     sys.exit(1)

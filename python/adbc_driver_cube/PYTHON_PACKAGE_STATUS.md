@@ -114,7 +114,7 @@ Status CubeStatement::SetOption(const std::string& key, const std::string& value
 
 ### Python Package
 ```
-/home/io/projects/learn_erl/adbc/python/adbc_driver_cube/
+path/to/adbc/python/adbc_driver_cube/
 ├── adbc_driver_cube/
 │   └── __init__.py          [NEW] Main driver module
 ├── setup.py                  [NEW] Package configuration
@@ -127,7 +127,7 @@ Status CubeStatement::SetOption(const std::string& key, const std::string& value
 
 ### C Driver
 ```
-/home/io/projects/learn_erl/adbc/3rd_party/apache-arrow-adbc/c/driver/cube/
+path/to/adbc/3rd_party/apache-arrow-adbc/c/driver/cube/
 └── cube.cc                   [MODIFIED] Added AdbcDriverInit function
 ```
 
@@ -136,7 +136,7 @@ Status CubeStatement::SetOption(const std::string& key, const std::string& value
 ## Installation
 
 ```bash
-cd /home/io/projects/learn_erl/adbc/python/adbc_driver_cube
+cd path/to/adbc/python/adbc_driver_cube
 
 # Create and activate virtual environment
 python3 -m venv venv
@@ -221,7 +221,7 @@ db.close()
 
 ### 1. Implement Statement Options in C Driver
 
-**File**: `/home/io/projects/learn_erl/adbc/3rd_party/apache-arrow-adbc/c/driver/cube/statement.cc`
+**File**: `path/to/adbc/3rd_party/apache-arrow-adbc/c/driver/cube/statement.cc`
 
 **Change needed**:
 ```cpp
@@ -246,7 +246,7 @@ ps aux | grep 4445
 
 # Should be cubesqld, not node
 # If needed, start cubesqld:
-cd /home/io/projects/learn_erl/cube/examples/recipes/arrow-ipc
+cd path/to/cube/examples/recipes/arrow-ipc
 ./dev-start.sh
 ```
 
@@ -304,19 +304,19 @@ Expected: **Arrow Native should be 2-5x faster** due to zero-copy data transfer.
 
 **Installation:**
 ```bash
-pip install -e /home/io/projects/learn_erl/adbc/python/adbc_driver_cube
+pip install -e path/to/adbc/python/adbc_driver_cube
 ```
 
 **Test Connection:**
 ```bash
-cd /home/io/projects/learn_erl/adbc/python/adbc_driver_cube
+cd path/to/adbc/python/adbc_driver_cube
 source venv/bin/activate
 python quick_test.py
 ```
 
 **C Library Location:**
 ```
-/home/io/projects/learn_erl/adbc/cmake_adbc/driver/cube/libadbc_driver_cube.so
+path/to/adbc/cmake_adbc/driver/cube/libadbc_driver_cube.so
 ```
 
 **Set Custom Library Path:**

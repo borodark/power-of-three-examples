@@ -1,4 +1,4 @@
-  Created /home/io/projects/learn_erl/power-of-three-examples/test/saturation_test.exs with:
+  Created path/to/power-of-three-examples/test/saturation_test.exs with:
 
   Test Suites
 
@@ -47,7 +47,7 @@
 
   Usage
 
-  cd ~/projects/learn_erl/power-of-three-examples
+  cd path/to/power-of-three-examples
 
   # Run all saturation tests
   mix test test/saturation_test.exs --include saturation
