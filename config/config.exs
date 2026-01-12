@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :logger, level: :debug
+
 config :pot_examples,
   namespace: ExamplesOfPoT,
   ecto_repos: [Postgres.Repo],
@@ -22,7 +24,7 @@ config :pot_examples, ExamplesOfPoT.AdbcResultCache,
   cleanup_interval_ms: 300_000
 
 config :pot_examples, Postgres.Repo,
-  port: 7432,
+  port: 8432,
   stacktrace: true,
   username: "postgres",
   password: "postgres",
@@ -33,14 +35,21 @@ config :pot_examples, Postgres.Repo,
   #  disable_composite_types: true,
   pool_size: System.schedulers_online() * 2
 
+config :pot_examples, Cubes.Repo,
+  port: 9432,
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "postgres",
+  ownership_timeout: 300_000,
+  timeout: 6_000_000,
+  #  disable_composite_types: true,
+  pool_size: System.schedulers_online() * 2
 
-# Cube ADBC connection pool configuration (PowerOfThree poolboy wrapper)
-config :power_of_3, PowerOfThree.CubeConnectionPool,
-  size: System.schedulers_online() * 2,
-  max_overflow: 2,
-  host: "localhost",
-  port: 8120,
-  token: "test"
+
+
 
 # Configures the endpoint
 config :pot_examples, ExamplesOfPoTWeb.Endpoint,

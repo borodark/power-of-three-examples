@@ -10,17 +10,11 @@ defmodule ExamplesOfPoT.Application do
     children = [
       ExamplesOfPoTWeb.Telemetry,
       Postgres.Repo,
+      Cubes.Repo,
       {DNSCluster, query: Application.get_env(:pot_examples, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: ExamplesOfPoT.PubSub},
       # Start a worker by calling: ExamplesOfPoT.Worker.start_link(arg)
       # {ExamplesOfPoT.Worker, arg},
-      # Cube ADBC connection pool
-      # Get Cube pool configuration
-      {ExamplesOfPoT.AdbcResultCache,
-       Application.get_env(:pot_examples, ExamplesOfPoT.AdbcResultCache, [])},
-      {PowerOfThree.CubeConnectionPool,
-       Application.get_env(:power_of_3, PowerOfThree.CubeConnectionPool, [])},
-
       # Start to serve requests, typically the last entry
       ExamplesOfPoTWeb.Endpoint
     ]

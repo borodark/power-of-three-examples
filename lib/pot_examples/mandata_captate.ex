@@ -1,18 +1,18 @@
 defmodule MagnaOrder do
   use Ecto.Schema
-  schema "public.order" do
-    field(:delivery_subtotal_amount, :integer)
-    field(:discount_total_amount, :integer)
-    field(:email, :string)
-    field(:financial_status, :string)
-    field(:fulfillment_status, :string)
-    field(:payment_reference, :string)
-    field(:subtotal_amount, :integer)
-    field(:tax_amount, :integer)
-    field(:total_amount, :integer)
+
+  @primary_key {:id, :id, autogenerate: false}
+
+  schema "orders_no_preagg" do
     field(:brand_code, :string)
     field(:market_code, :string)
-    field(:customer_id, :integer)
-    timestamps()
+    field(:updated_at, :utc_datetime)
+    field(:inserted_at, :utc_datetime)
+    ## Measures
+    field(:count, :integer)
+    field(:total_amount_sum, :integer)
+    field(:tax_amount_sum, :integer)
+    field(:subtotal_amount_sum, :integer)
+    field(:customer_id_distinct, :integer)
   end
 end
