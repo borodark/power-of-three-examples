@@ -44,5 +44,5 @@ defmodule PotExamples.Address do
     timestamps()
   end
 
-  cube(:of_addresses)
+  cube(:of_addresses, sql_table: "address")
 end

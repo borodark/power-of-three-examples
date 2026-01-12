@@ -1,7 +1,7 @@
 defmodule MagnaOrder do
   use Ecto.Schema
 
-  @primary_key {:id, :id, autogenerate: false}
+  @primary_key {:id, :float, autogenerate: false}
 
   schema "orders_no_preagg" do
     field(:brand_code, :string)
@@ -10,9 +10,9 @@ defmodule MagnaOrder do
     field(:inserted_at, :utc_datetime)
     ## Measures
     field(:count, :integer)
-    field(:total_amount_sum, :integer)
-    field(:tax_amount_sum, :integer)
-    field(:subtotal_amount_sum, :integer)
+    field(:total_amount_sum, :float)
+    field(:tax_amount_sum, :float)
+    field(:subtotal_amount_sum, :float)
     field(:customer_id_distinct, :integer)
   end
 end
