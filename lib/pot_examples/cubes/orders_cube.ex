@@ -21,3 +21,16 @@ defmodule Cubes.OrdersNoPreagg do
     measure :customer_id_distinct, :integer
   end
 end
+
+
+
+defmodule Cubes.OrdersWithPreagg do
+  @moduledoc """
+  Ecto schema for querying the orders_no_preagg cube.
+  Generated using PowerOfThree.CubeSchema.
+  """
+
+  use PowerOfThree.CubeSchema
+
+  cube_schema :orders_with_preagg
+end

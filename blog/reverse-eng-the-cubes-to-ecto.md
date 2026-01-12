@@ -107,4 +107,70 @@ SELECT o0."brand_code", sum(o0."total_amount_sum"), count(o0."count") FROM "orde
   {"Harp", 33419137.0, 12006}
 ]
 
+
+iex(one@localhost)7> query = from o in Cubes.OrdersWithPreagg, group_by: [o.brand_code, o.market_code],  select: {o.brand_code, o.market_code, sum(o.total_amount_sum), count(o.count)}, order_by: [desc: 3], limit: 10000
+
+#Ecto.Query<from o0 in Cubes.OrdersWithPreagg,
+ group_by: [o0.brand_code, o0.market_code], order_by: [desc: 3], limit: 10000,
+ select: {o0.brand_code, o0.market_code, sum(o0.total_amount_sum), count(o0.count)}>
+iex(one@localhost)8> Cubes.Repo.all(query)
+
+[debug] QUERY OK source="orders_with_preagg" db=465.1ms decode=4.4ms queue=63.6ms idle=1969.8ms
+SELECT o0."brand_code", o0."market_code", sum(o0."total_amount_sum"), count(o0."count") FROM "orders_with_preagg" AS o0 GROUP BY o0."brand_code", o0."market_code" ORDER BY 3 DESC LIMIT 10000 []
+↳ :elixir.eval_external_handler/3, at: src/elixir.erl:386
+[
+  {"Sapporo Premium", "BQ", 318629.0, 99},
+  {"Pabst Blue Ribbon", "BQ", 317019.0, 113},
+  {"Budweiser", "BQ", 300214.0, 100},
+  {"Blue Moon", "BQ", 292281.0, 94},
+  {"Guinness", "BQ", 289572.0, 107},
+  {"Samuel Adams", "BQ", 287989.0, 103},
+  {"Pacifico", "BQ", 287117.0, 97},
+  {"Sierra Nevada", "BQ", 285322.0, 97},
+  {"Fosters", "BQ", 278013.0, 103},
+  {"Dos Equis", "BQ", 276598.0, 97},
+  {"Corona Extra", "BQ", 276251.0, 98},
+  {"Red Stripe", "BQ", 276201.0, 101},
+  {"Murphys", "BQ", 274747.0, 109},
+  {"Coors lite", "BQ", 273765.0, 93},
+  {"Miller Draft", "BQ", 267945.0, 93},
+  {"Kirin Inchiban", "BQ", 265479.0, 94},
+  {"Lowenbrau", "BQ", 263631.0, 95},
+  {"Amstel", "BQ", 262521.0, 86},
+  {"Leffe", "BQ", 262101.0, 100},
+  {"Stella Artois", "BQ", 255799.0, 101},
+  {"Harp", "BQ", 255116.0, 97},
+  {"Birra Moretti", "BQ", 253663.0, 96},
+  {"Patagonia", "BQ", 252580.0, 94},
+  {"Delirium Noctorum'", "BQ", 248882.0, 85},
+  {"Carlsberg", "BQ", 246613.0, 94},
+  {"Paulaner", "BQ", 243588.0, 90},
+  {"Rolling Rock", "BQ", 241537.0, 88},
+  {"Quimes", "BQ", 240502.0, 94},
+  {"Heineken", "BQ", 239358.0, 82},
+  {"Leffe", "PW", 236982.0, 70},
+  {"Tsingtao", "BQ", 233910.0, 88},
+  {"Hoegaarden", "BQ", 232964.0, 89},
+  {"Becks", "BQ", 231563.0, 89},
+  {"Leffe", "LB", 229888.0, 68},
+  {"Becks", "NP", 223388.0, 83},
+  {"Rolling Rock", "PY", 219185.0, 73},
+  {"Blue Moon", "AI", 218804.0, 69},
+  {"Patagonia", "CM", 216829.0, 64},
+  {"Budweiser", "BD", 216726.0, 68},
+  {"BudLight", "BQ", 215081.0, 84},
+  {"Tsingtao", "UA", 214073.0, 68},
+  {"Heineken", "RU", 211357.0, 68},
+  {"Murphys", "IL", 210477.0, 67},
+  {"Delirium Noctorum'", "PH", 208952.0, 65},
+  {"Guinness", "CI", 208822.0, 67},
+  {"Delirium Noctorum'", "RW", 207017.0, 69},
+  {"Pacifico", "EE", 206179.0, ...},
+  {"Carlsberg", "GR", ...},
+  {"Amstel", ...},
+  {...},
+  ...
+]
+
+
 ```
